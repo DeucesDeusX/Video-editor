@@ -6,3 +6,6 @@ dist/
 .idea/
 .env
 .env.local
+test-results/
+playwright-report/
+!tests/fixtures/test-clip.mp4
