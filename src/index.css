@@ -13,9 +13,70 @@
   --good: #6ce0b6;
   --warn: #f4c166;
   --bad: #ff7a85;
+  --error: #ff6b6b;
   --radius: 8px;
   --radius-sm: 5px;
+  --radius-lg: 12px;
 }
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 5px 10px; min-height: 26px;
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); font-size: 12px; color: var(--text);
+  cursor: pointer; white-space: nowrap;
+  transition: border-color .12s, background .12s, transform .08s;
+}
+.btn:hover:not(:disabled) { border-color: var(--line-2); background: var(--panel-3); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: .35; cursor: default; }
+.btn.primary {
+  background: linear-gradient(180deg, rgba(126,163,255,.22), rgba(126,163,255,.08)), var(--panel-2);
+  border-color: rgba(126,163,255,.35);
+}
+.btn.primary:hover:not(:disabled) { border-color: rgba(126,163,255,.55); }
+.btn.good {
+  background: linear-gradient(180deg, rgba(108,224,182,.18), rgba(108,224,182,.06)), var(--panel-2);
+  border-color: rgba(108,224,182,.3);
+}
+.btn.warn {
+  background: linear-gradient(180deg, rgba(244,193,102,.18), rgba(244,193,102,.05)), var(--panel-2);
+  border-color: rgba(244,193,102,.3);
+}
+.btn.ghost { background: transparent; border-color: transparent; }
+.btn.ghost:hover:not(:disabled) { background: var(--panel-2); border-color: var(--line); }
+.btn.active { background: var(--panel-3); border-color: var(--accent-2); color: var(--accent); }
+.btn.tiny { min-height: 22px; padding: 2px 8px; font-size: 11px; border-radius: 4px; }
+.btn.icon { width: 26px; padding: 0; }
+
+/* ── Inputs ──────────────────────────────────────────────── */
+.inp {
+  width: 100%; padding: 6px 9px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); font-size: 12px; color: var(--text);
+  transition: border-color .12s;
+}
+.inp:focus { outline: none; border-color: var(--accent-2); }
+
+/* ── Range sliders ───────────────────────────────────────── */
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  height: 3px; background: var(--line); border-radius: 2px; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--accent); border: none;
+}
+input[type=range]::-moz-range-thumb {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--accent); border: none;
+}
+
+/* ── Labels ──────────────────────────────────────────────── */
+.sec-label { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.micro { font-size: 11px; color: var(--mutedder); line-height: 1.5; }
 
 * {
   box-sizing: border-box;

@@ -1,0 +1,78 @@
+.topbar {
+  height: 44px;
+  padding: 0 10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  z-index: 50;
+}
+
+.topbar-brand {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -.01em;
+  white-space: nowrap;
+}
+
+.topbar-brand::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--good);
+  border-radius: 50%;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--line);
+  flex-shrink: 0;
+}
+
+.topbar-project-name {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text);
+  min-width: 160px;
+  max-width: 260px;
+  font-family: inherit;
+}
+
+.topbar-project-name:hover {
+  border-color: var(--line);
+}
+
+.topbar-project-name:focus {
+  outline: none;
+  border-color: var(--accent-2);
+  background: var(--panel-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.chip-progress {
+  color: var(--accent);
+  border-color: rgba(126, 163, 255, .25);
+  background: rgba(126, 163, 255, .07);
+}

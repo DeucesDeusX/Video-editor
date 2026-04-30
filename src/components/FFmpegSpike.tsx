@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile, toBlobURL } from '@ffmpeg/util'
+import { fetchFile } from '@ffmpeg/util'
 import './FFmpegSpike.css'
 
 type Status = 'idle' | 'loading' | 'ready' | 'converting' | 'done' | 'error'
@@ -11,8 +11,9 @@ interface LogEntry {
   time?: number
 }
 
-// CDN base for single-thread FFmpeg core (no SharedArrayBuffer needed for this build)
-const FFMPEG_CORE_CDN = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd'
+// Use ESM build — Vite spawns module workers so importScripts() fails,
+// the library falls back to dynamic import(), which needs an ES module default export
+const FFMPEG_CORE_CDN = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
 
 export default function FFmpegSpike() {
   const [status, setStatus] = useState<Status>('idle')
@@ -57,9 +58,11 @@ export default function FFmpegSpike() {
       log('Loading FFmpeg.wasm core from CDN…')
       const t0 = performance.now()
 
+      // Pass URLs directly — CORS/CORP headers on unpkg allow this, and the
+      // direct path preserves "/umd/" so the library's ESM fallback works correctly
       await ffmpeg.load({
-        coreURL: await toBlobURL(`${FFMPEG_CORE_CDN}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${FFMPEG_CORE_CDN}/ffmpeg-core.wasm`, 'application/wasm'),
+        coreURL: `${FFMPEG_CORE_CDN}/ffmpeg-core.js`,
+        wasmURL: `${FFMPEG_CORE_CDN}/ffmpeg-core.wasm`,
       })
 
       const elapsed = Math.round(performance.now() - t0)
@@ -79,7 +82,10 @@ export default function FFmpegSpike() {
     setInputName(file.name)
     setOutputURL(null)
     setConvertMs(null)
-    setLogs((prev) => [...prev, { text: `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`, type: 'info' }])
+    const mb = file.size / 1024 / 1024
+    const sizeStr = mb > 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${mb.toFixed(1)} MB`
+    const warn = mb > 500 ? ' ⚠️ File too large — fetchFile loads into memory. Use a clip under 200MB.' : ''
+    setLogs((prev) => [...prev, { text: `Selected: ${file.name} (${sizeStr})${warn}`, type: mb > 500 ? 'error' : 'info' }])
   }
 
   const runConvert = async () => {
