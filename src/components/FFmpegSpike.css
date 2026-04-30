@@ -1,0 +1,205 @@
+.ffmpeg-spike {
+  flex-shrink: 0;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.spike-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--panel-2);
+  border: none;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+
+.spike-toggle:hover {
+  background: var(--panel);
+}
+
+.spike-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--warn);
+  border: 1px solid var(--warn);
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+}
+
+.spike-chevron {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* Body */
+.spike-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+/* Controls */
+.spike-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.spike-btn {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.spike-btn:hover:not(:disabled) {
+  background: var(--panel);
+  border-color: var(--muted);
+}
+
+.spike-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.spike-btn--accent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.spike-btn--accent:hover:not(:disabled) {
+  background: hsl(225, 100%, 75%);
+  border-color: hsl(225, 100%, 75%);
+}
+
+.spike-btn--success {
+  background: var(--good);
+  border-color: var(--good);
+  color: #000;
+  display: inline-flex;
+  align-items: center;
+}
+
+.spike-file-label {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px dashed var(--line);
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: border-color 0.1s, color 0.1s;
+}
+
+.spike-file-label:hover:not(.disabled) {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.spike-file-label.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.spike-file-label input[type="file"] {
+  display: none;
+}
+
+/* Metrics */
+.spike-metrics {
+  display: flex;
+  gap: 20px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metric-label {
+  font-size: 10px;
+  color: var(--mutedder);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-value {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.metric-value.good {
+  color: var(--good);
+}
+
+.metric-value.warn {
+  color: var(--warn);
+}
+
+/* Log */
+.spike-log {
+  background: #050709;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px 10px;
+  height: 140px;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.log-placeholder {
+  color: var(--mutedder);
+  font-style: italic;
+}
+
+.log-line {
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.log-info {
+  color: var(--muted);
+}
+
+.log-ffmpeg {
+  color: var(--mutedder);
+}
+
+.log-success {
+  color: var(--good);
+}
+
+.log-error {
+  color: var(--error);
+}

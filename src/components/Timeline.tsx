@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import './Timeline.css'
 
 interface Clip {
@@ -10,14 +10,38 @@ interface Clip {
   position: number
 }
 
-const MOCK_CLIPS: Clip[] = Array.from({ length: 20 }, (_, i) => ({
-  id: `clip-${i}`,
-  name: `Clip ${i + 1}`,
-  duration: 3 + Math.random() * 4, // 3-7 seconds
-  type: ['video', 'video', 'audio', 'text'][Math.floor(Math.random() * 4)] as 'video' | 'audio' | 'text',
-  trackIndex: i % 3,
-  position: (i % 3) * 2,
-}))
+interface DragState {
+  clipId: string
+  startPointerX: number
+  startPosition: number
+  clipDuration: number
+}
+
+const TOTAL_DURATION = 30 // seconds
+const FIXED_DURATIONS = [4.9, 3.9, 4.9, 4.0, 4.3, 2.3, 2.5, 3.2, 3.1, 3.8, 2.9, 3.4]
+
+// Build clips per track with deterministic cumulative positioning (no overlaps)
+const clipsByTrack: Record<number, Clip[]> = { 0: [], 1: [], 2: [] }
+const trackPositions: Record<number, number> = { 0: 0, 1: 0, 2: 0 }
+
+for (let i = 0; i < 20; i++) {
+  const trackIndex = i % 3
+  const duration = FIXED_DURATIONS[i % FIXED_DURATIONS.length]
+  const position = trackPositions[trackIndex]
+  if (position + duration <= TOTAL_DURATION - 1) {
+    clipsByTrack[trackIndex].push({
+      id: `clip-${i}`,
+      name: `Clip ${i + 1}`,
+      duration,
+      type: (['video', 'video', 'audio', 'text'] as const)[i % 4],
+      trackIndex,
+      position,
+    })
+    trackPositions[trackIndex] += duration
+  }
+}
+
+const MOCK_CLIPS: Clip[] = Object.values(clipsByTrack).flat()
 
 const TRACKS = [
   { id: 'video', name: 'Video', hue: 218 },
@@ -27,58 +51,70 @@ const TRACKS = [
 
 export default function Timeline() {
   const [clips, setClips] = useState<Clip[]>(MOCK_CLIPS)
-  const [draggedClip, setDraggedClip] = useState<string | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
   const [playheadPosition, setPlayheadPosition] = useState(0)
-  const timelineRef = useRef<HTMLDivElement>(null)
+  const trackAreaRef = useRef<HTMLDivElement>(null)
 
-  const handleClipDragStart = (clipId: string) => {
-    setDraggedClip(clipId)
-  }
+  // Ref holds live drag data — no stale closure issues in move handler
+  const dragRef = useRef<DragState | null>(null)
 
-  const handleClipDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-  }
-
-  const handleClipDrop = (targetTrackId: string, targetPosition: number) => {
-    if (!draggedClip) return
-
-    setClips((prev) =>
-      prev.map((clip) => {
-        if (clip.id === draggedClip) {
-          const trackIndex = TRACKS.findIndex((t) => t.id === targetTrackId)
-          return {
-            ...clip,
-            trackIndex,
-            position: Math.max(0, targetPosition),
-          }
-        }
-        return clip
-      })
-    )
-
-    setDraggedClip(null)
-  }
-
-  const handleTimelineClick = (e: React.MouseEvent) => {
-    const timeline = timelineRef.current
-    if (!timeline) return
-
-    const rect = timeline.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const position = (x / rect.width) * 30 // 30 second timeline
-    setPlayheadPosition(Math.max(0, Math.min(30, position)))
-  }
+  const getTrackAreaRect = () => trackAreaRef.current?.getBoundingClientRect() ?? null
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = (seconds % 60).toFixed(1)
-    return `${mins}:${secs}`
+    return `${mins}:${secs.padStart(4, '0')}`
   }
+
+  const handleTrackAreaClick = (e: React.MouseEvent) => {
+    // Ignore clicks that originated from a clip (they start drags, not scrubs)
+    if ((e.target as HTMLElement).closest('.clip')) return
+    const rect = getTrackAreaRect()
+    if (!rect) return
+    const x = e.clientX - rect.left
+    const time = (x / rect.width) * TOTAL_DURATION
+    setPlayheadPosition(Math.max(0, Math.min(TOTAL_DURATION, time)))
+  }
+
+  const handleClipPointerDown = useCallback((e: React.PointerEvent, clip: Clip) => {
+    e.preventDefault()
+    e.stopPropagation()
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    dragRef.current = {
+      clipId: clip.id,
+      startPointerX: e.clientX,
+      startPosition: clip.position,
+      clipDuration: clip.duration,
+    }
+    setDraggingId(clip.id)
+  }, [])
+
+  const handleClipPointerMove = useCallback((e: React.PointerEvent) => {
+    const drag = dragRef.current
+    if (!drag) return
+    const rect = getTrackAreaRect()
+    if (!rect) return
+    const deltaX = e.clientX - drag.startPointerX
+    const deltaTime = (deltaX / rect.width) * TOTAL_DURATION
+    const newPosition = Math.max(
+      0,
+      Math.min(TOTAL_DURATION - drag.clipDuration, drag.startPosition + deltaTime)
+    )
+    setClips((prev) =>
+      prev.map((c) => (c.id === drag.clipId ? { ...c, position: newPosition } : c))
+    )
+  }, [])
+
+  const handleClipPointerUp = useCallback(() => {
+    dragRef.current = null
+    setDraggingId(null)
+  }, [])
 
   return (
     <div className="timeline">
+      {/* Header: label spacer + time ruler */}
       <div className="timeline-header">
-        <div className="timeline-label">Timeline</div>
+        <div className="timeline-label-spacer">Timeline</div>
         <div className="timeline-ruler">
           {Array.from({ length: 31 }, (_, i) => (
             <div key={i} className="ruler-tick">
@@ -88,64 +124,59 @@ export default function Timeline() {
         </div>
       </div>
 
-      <div
-        className="timeline-tracks"
-        ref={timelineRef}
-        onClick={handleTimelineClick}
-      >
-        {TRACKS.map((track) => (
-          <div key={track.id} className="track">
-            <div className="track-label" style={{ '--hue': track.hue } as any}>
+      {/* Body: track labels column + scrollable track content area */}
+      <div className="timeline-body">
+        <div className="track-labels">
+          {TRACKS.map((track) => (
+            <div key={track.id} className="track-label" style={{ '--hue': track.hue } as React.CSSProperties}>
               {track.name}
             </div>
-            <div
-              className="track-content"
-              onDragOver={handleClipDragOver}
-              onDrop={(e) => {
-                e.preventDefault()
-                const timeline = timelineRef.current
-                if (!timeline) return
-                const rect = timeline.getBoundingClientRect()
-                const x = e.clientX - rect.left
-                const position = (x / rect.width) * 30
-                handleClipDrop(track.id, position)
-              }}
-            >
+          ))}
+        </div>
+
+        {/* All clip positioning and the playhead share this coordinate space */}
+        <div
+          className="track-area"
+          ref={trackAreaRef}
+          onClick={handleTrackAreaClick}
+          style={{ cursor: draggingId ? 'grabbing' : undefined }}
+        >
+          {TRACKS.map((track) => (
+            <div key={track.id} className="track-content">
               {clips
-                .filter((clip) => track.id === TRACKS[clip.trackIndex].id)
+                .filter((clip) => TRACKS[clip.trackIndex].id === track.id)
                 .map((clip) => (
                   <div
                     key={clip.id}
-                    className={`clip ${draggedClip === clip.id ? 'dragging' : ''}`}
+                    className={`clip ${draggingId === clip.id ? 'dragging' : ''}`}
                     style={{
-                      left: `${(clip.position / 30) * 100}%`,
-                      width: `${(clip.duration / 30) * 100}%`,
+                      left: `${(clip.position / TOTAL_DURATION) * 100}%`,
+                      width: `${(clip.duration / TOTAL_DURATION) * 100}%`,
                       '--hue': track.hue,
-                    } as any}
-                    draggable
-                    onDragStart={() => handleClipDragStart(clip.id)}
-                    title={`${clip.name} - ${formatTime(clip.duration)}`}
+                    } as React.CSSProperties}
+                    onPointerDown={(e) => handleClipPointerDown(e, clip)}
+                    onPointerMove={handleClipPointerMove}
+                    onPointerUp={handleClipPointerUp}
+                    title={`${clip.name} — ${formatTime(clip.duration)}`}
                   >
                     <span className="clip-name">{clip.name}</span>
                     <span className="clip-duration">{formatTime(clip.duration)}</span>
                   </div>
                 ))}
             </div>
-          </div>
-        ))}
+          ))}
 
-        {/* Playhead */}
-        <div
-          className="playhead"
-          style={{
-            left: `${(playheadPosition / 30) * 100}%`,
-          }}
-        />
+          {/* Playhead shares track-area coordinate space — aligns exactly with clips */}
+          <div
+            className="playhead"
+            style={{ left: `${(playheadPosition / TOTAL_DURATION) * 100}%` }}
+          />
+        </div>
       </div>
 
       <div className="timeline-footer">
         <span className="playhead-time">{formatTime(playheadPosition)}</span>
-        <span className="total-duration">/ {formatTime(30)}</span>
+        <span className="total-duration">/ {formatTime(TOTAL_DURATION)}</span>
       </div>
     </div>
   )
