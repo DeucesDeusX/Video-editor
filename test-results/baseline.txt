@@ -1,0 +1,253 @@
+﻿
+Running 10 tests using 3 workers
+
+  ok  2 [chromium] › tests\e2e\01-timeline.spec.ts:10:3 › Timeline & UI › fixture file exists (3.8s)
+  x   1 [chromium] › tests\e2e\02-playback.spec.ts:12:3 › Playback › stage-video has decoded dimensions after import (14.1s)
+  x   3 [chromium] › tests\e2e\03-export.spec.ts:9:3 › FFmpeg Export (Spike 2) › FFmpeg panel exists and can be expanded (14.2s)
+  x   4 [chromium] › tests\e2e\01-timeline.spec.ts:14:3 › Timeline & UI › import video — clip appears on main lane (11.6s)
+  x   5 [chromium] › tests\e2e\02-playback.spec.ts:21:3 › Playback › video currentTime advances during play (11.7s)
+  x   7 [chromium] › tests\e2e\01-timeline.spec.ts:21:3 › Timeline & UI › imported clip has non-zero duration label (11.6s)
+  x   8 [chromium] › tests\e2e\02-playback.spec.ts:29:3 › Playback › pause stops playback (11.6s)
+  x   9 [chromium] › tests\e2e\01-timeline.spec.ts:29:3 › Timeline & UI › drag clip to new position (11.9s)
+  x   6 [chromium] › tests\e2e\03-export.spec.ts:16:3 › FFmpeg Export (Spike 2) › Load FFmpeg succeeds within 30s (1.5m)
+  x  10 [chromium] › tests\e2e\03-export.spec.ts:22:3 › FFmpeg Export (Spike 2) › Convert test fixture to H.264 within 60s (1.5m)
+
+
+  1) [chromium] › tests\e2e\01-timeline.spec.ts:14:3 › Timeline & UI › import video — clip appears on main lane 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.lane-clips .clip-block') to be visible[22m
+
+
+       at helpers\app.ts:25
+
+      23 | /** Wait for at least one clip block to appear on any lane */
+      24 | export async function waitForClip(page: Page) {
+    > 25 |   await page.waitForSelector('.lane-clips .clip-block', { timeout: 10_000 })
+         |              ^
+      26 | }
+      27 |
+      28 | /** Click the play button */
+        at waitForClip (C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\helpers\app.ts:25:14)
+        at C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\01-timeline.spec.ts:16:11
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\01-timeline-Timeline-UI-im-efe30-—-clip-appears-on-main-lane-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\01-timeline-Timeline-UI-im-efe30-—-clip-appears-on-main-lane-chromium\error-context.md
+
+  2) [chromium] › tests\e2e\01-timeline.spec.ts:21:3 › Timeline & UI › imported clip has non-zero duration label 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.lane-clips .clip-block') to be visible[22m
+
+
+       at helpers\app.ts:25
+
+      23 | /** Wait for at least one clip block to appear on any lane */
+      24 | export async function waitForClip(page: Page) {
+    > 25 |   await page.waitForSelector('.lane-clips .clip-block', { timeout: 10_000 })
+         |              ^
+      26 | }
+      27 |
+      28 | /** Click the play button */
+        at waitForClip (C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\helpers\app.ts:25:14)
+        at C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\01-timeline.spec.ts:23:11
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\01-timeline-Timeline-UI-im-8da8e-has-non-zero-duration-label-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\01-timeline-Timeline-UI-im-8da8e-has-non-zero-duration-label-chromium\error-context.md
+
+  3) [chromium] › tests\e2e\01-timeline.spec.ts:29:3 › Timeline & UI › drag clip to new position ───
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.lane-clips .clip-block') to be visible[22m
+
+
+       at helpers\app.ts:25
+
+      23 | /** Wait for at least one clip block to appear on any lane */
+      24 | export async function waitForClip(page: Page) {
+    > 25 |   await page.waitForSelector('.lane-clips .clip-block', { timeout: 10_000 })
+         |              ^
+      26 | }
+      27 |
+      28 | /** Click the play button */
+        at waitForClip (C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\helpers\app.ts:25:14)
+        at C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\01-timeline.spec.ts:31:11
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\01-timeline-Timeline-UI-drag-clip-to-new-position-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\01-timeline-Timeline-UI-drag-clip-to-new-position-chromium\error-context.md
+
+  4) [chromium] › tests\e2e\02-playback.spec.ts:12:3 › Playback › stage-video has decoded dimensions after import 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.lane-clips .clip-block') to be visible[22m
+
+
+       at helpers\app.ts:25
+
+      23 | /** Wait for at least one clip block to appear on any lane */
+      24 | export async function waitForClip(page: Page) {
+    > 25 |   await page.waitForSelector('.lane-clips .clip-block', { timeout: 10_000 })
+         |              ^
+      26 | }
+      27 |
+      28 | /** Click the play button */
+        at waitForClip (C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\helpers\app.ts:25:14)
+        at C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\02-playback.spec.ts:9:11
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\02-playback-Playback-stage-fbc6f-ded-dimensions-after-import-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\02-playback-Playback-stage-fbc6f-ded-dimensions-after-import-chromium\error-context.md
+
+  5) [chromium] › tests\e2e\02-playback.spec.ts:21:3 › Playback › video currentTime advances during play 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.lane-clips .clip-block') to be visible[22m
+
+
+       at helpers\app.ts:25
+
+      23 | /** Wait for at least one clip block to appear on any lane */
+      24 | export async function waitForClip(page: Page) {
+    > 25 |   await page.waitForSelector('.lane-clips .clip-block', { timeout: 10_000 })
+         |              ^
+      26 | }
+      27 |
+      28 | /** Click the play button */
+        at waitForClip (C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\helpers\app.ts:25:14)
+        at C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\02-playback.spec.ts:9:11
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\02-playback-Playback-video-currentTime-advances-during-play-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\02-playback-Playback-video-currentTime-advances-during-play-chromium\error-context.md
+
+  6) [chromium] › tests\e2e\02-playback.spec.ts:29:3 › Playback › pause stops playback ─────────────
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.lane-clips .clip-block') to be visible[22m
+
+
+       at helpers\app.ts:25
+
+      23 | /** Wait for at least one clip block to appear on any lane */
+      24 | export async function waitForClip(page: Page) {
+    > 25 |   await page.waitForSelector('.lane-clips .clip-block', { timeout: 10_000 })
+         |              ^
+      26 | }
+      27 |
+      28 | /** Click the play button */
+        at waitForClip (C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\helpers\app.ts:25:14)
+        at C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\02-playback.spec.ts:9:11
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\02-playback-Playback-pause-stops-playback-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\02-playback-Playback-pause-stops-playback-chromium\error-context.md
+
+  7) [chromium] › tests\e2e\03-export.spec.ts:9:3 › FFmpeg Export (Spike 2) › FFmpeg panel exists and can be expanded 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('.spike-toggle, button:has-text("FFmpeg")')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for locator('.spike-toggle, button:has-text("FFmpeg")')[22m
+
+
+       9 |   test('FFmpeg panel exists and can be expanded', async ({ page }) => {
+      10 |     const panel = page.locator('.spike-toggle, button:has-text("FFmpeg")')
+    > 11 |     await expect(panel).toBeVisible()
+         |                         ^
+      12 |     await panel.click()
+      13 |     await expect(page.locator('.spike-body, .spike-controls')).toBeVisible()
+      14 |   })
+        at C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\03-export.spec.ts:11:25
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\03-export-FFmpeg-Export-Sp-34dd3--exists-and-can-be-expanded-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\03-export-FFmpeg-Export-Sp-34dd3--exists-and-can-be-expanded-chromium\error-context.md
+
+  8) [chromium] › tests\e2e\03-export.spec.ts:16:3 › FFmpeg Export (Spike 2) › Load FFmpeg succeeds within 30s 
+
+    [31mTest timeout of 90000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 90000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.spike-toggle, button:has-text("FFmpeg")')[22m
+
+
+      15 |
+      16 |   test('Load FFmpeg succeeds within 30s', async ({ page }) => {
+    > 17 |     await page.locator('.spike-toggle, button:has-text("FFmpeg")').click()
+         |                                                                    ^
+      18 |     await page.click('button:has-text("Load FFmpeg")')
+      19 |     await expect(page.locator('.spike-log, .log-line')).toContainText('ready to convert', { timeout: 30_000 })
+      20 |   })
+        at C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\03-export.spec.ts:17:68
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\03-export-FFmpeg-Export-Sp-a3c88--FFmpeg-succeeds-within-30s-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\03-export-FFmpeg-Export-Sp-a3c88--FFmpeg-succeeds-within-30s-chromium\error-context.md
+
+  9) [chromium] › tests\e2e\03-export.spec.ts:22:3 › FFmpeg Export (Spike 2) › Convert test fixture to H.264 within 60s 
+
+    [31mTest timeout of 90000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 90000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.spike-toggle, button:has-text("FFmpeg")')[22m
+
+
+      21 |
+      22 |   test('Convert test fixture to H.264 within 60s', async ({ page }) => {
+    > 23 |     await page.locator('.spike-toggle, button:has-text("FFmpeg")').click()
+         |                                                                    ^
+      24 |     await page.click('button:has-text("Load FFmpeg")')
+      25 |     await expect(page.locator('.spike-log')).toContainText('ready', { timeout: 30_000 })
+      26 |     const [fc] = await Promise.all([
+        at C:\Users\User\Documents\Overmind\Projects\01-Video-Editor\tests\e2e\03-export.spec.ts:23:68
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\03-export-FFmpeg-Export-Sp-381fd-fixture-to-H-264-within-60s-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\03-export-FFmpeg-Export-Sp-381fd-fixture-to-H-264-within-60s-chromium\error-context.md
+
+  9 failed
+    [chromium] › tests\e2e\01-timeline.spec.ts:14:3 › Timeline & UI › import video — clip appears on main lane 
+    [chromium] › tests\e2e\01-timeline.spec.ts:21:3 › Timeline & UI › imported clip has non-zero duration label 
+    [chromium] › tests\e2e\01-timeline.spec.ts:29:3 › Timeline & UI › drag clip to new position ────
+    [chromium] › tests\e2e\02-playback.spec.ts:12:3 › Playback › stage-video has decoded dimensions after import 
+    [chromium] › tests\e2e\02-playback.spec.ts:21:3 › Playback › video currentTime advances during play 
+    [chromium] › tests\e2e\02-playback.spec.ts:29:3 › Playback › pause stops playback ──────────────
+    [chromium] › tests\e2e\03-export.spec.ts:9:3 › FFmpeg Export (Spike 2) › FFmpeg panel exists and can be expanded 
+    [chromium] › tests\e2e\03-export.spec.ts:16:3 › FFmpeg Export (Spike 2) › Load FFmpeg succeeds within 30s 
+    [chromium] › tests\e2e\03-export.spec.ts:22:3 › FFmpeg Export (Spike 2) › Convert test fixture to H.264 within 60s 
+  1 passed (4.6m)
