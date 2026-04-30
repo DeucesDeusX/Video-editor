@@ -6,6 +6,14 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    // Required for SharedArrayBuffer (FFmpeg.wasm multi-thread mode)
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  },
+  optimizeDeps: {
+    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
   },
   build: {
     target: 'esnext',

@@ -9,16 +9,20 @@
   user-select: none;
 }
 
+/* ── Header ─────────────────────────────────────────────── */
+
 .timeline-header {
   display: flex;
   height: 40px;
   border-bottom: 1px solid var(--line);
   background: var(--panel-2);
   align-items: stretch;
+  flex-shrink: 0;
 }
 
-.timeline-label {
+.timeline-label-spacer {
   width: 80px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   padding: 0 10px;
@@ -26,7 +30,6 @@
   font-weight: 500;
   color: var(--muted);
   border-right: 1px solid var(--line);
-  flex-shrink: 0;
 }
 
 .timeline-ruler {
@@ -45,60 +48,71 @@
   border-right: 1px solid var(--line-2);
 }
 
-.timeline-tracks {
+/* ── Body ────────────────────────────────────────────────── */
+
+.timeline-body {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-  position: relative;
+  overflow: hidden;
   border-bottom: 1px solid var(--line);
 }
 
-.track {
-  display: flex;
-  height: 80px;
-  border-bottom: 1px solid var(--line-2);
+/* Track labels: fixed 80px column */
+.track-labels {
+  width: 80px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-2);
+  border-right: 1px solid var(--line);
 }
 
 .track-label {
-  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   padding: 0 10px;
   font-size: 12px;
   color: var(--text);
-  border-right: 1px solid var(--line);
-  background: var(--panel-2);
-  flex-shrink: 0;
-  position: sticky;
-  left: 0;
-  z-index: 10;
+  border-bottom: 1px solid var(--line-2);
+}
+
+/* Track content area: everything clips + playhead are positioned relative to */
+.track-area {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  cursor: crosshair;
 }
 
 .track-content {
-  flex: 1;
+  height: 80px;
+  flex-shrink: 0;
   position: relative;
   background: var(--panel);
-  overflow-x: hidden;
+  border-bottom: 1px solid var(--line-2);
 }
+
+/* ── Clips ───────────────────────────────────────────────── */
 
 .clip {
   position: absolute;
   top: 4px;
-  height: 72px;
-  margin: 0;
+  bottom: 4px;
   background: linear-gradient(
     135deg,
     hsl(var(--hue), 100%, 50%),
     hsl(var(--hue), 85%, 45%)
   );
-  border: 1px solid hsl(var(--hue), 100%, 60%);
-  border-radius: var(--radius-sm);
+  border: 2px solid hsl(var(--hue), 100%, 60%);
+  border-radius: 4px;
   padding: 4px 6px;
   cursor: grab;
-  transition: opacity 0.1s, box-shadow 0.1s;
+  transition: box-shadow 0.1s;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -106,8 +120,9 @@
   font-size: 11px;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  user-select: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  z-index: 10;
+  touch-action: none;
 }
 
 .clip:hover {
@@ -116,8 +131,10 @@
 }
 
 .clip.dragging {
-  opacity: 0.5;
+  opacity: 0.75;
   cursor: grabbing;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 20;
 }
 
 .clip-name {
@@ -132,27 +149,31 @@
   opacity: 0.85;
 }
 
+/* ── Playhead ────────────────────────────────────────────── */
+
 .playhead {
   position: absolute;
   top: 0;
+  bottom: 0;
   width: 2px;
-  height: 100%;
   background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
-  z-index: 20;
+  box-shadow: 0 0 8px var(--accent), 0 0 4px var(--accent);
+  z-index: 100;
   pointer-events: none;
 }
+
+/* ── Footer ──────────────────────────────────────────────── */
 
 .timeline-footer {
   display: flex;
   align-items: center;
   height: 30px;
   padding: 0 10px;
-  border-top: 1px solid var(--line);
   background: var(--panel-2);
   gap: 8px;
   font-size: 11px;
   color: var(--muted);
+  flex-shrink: 0;
 }
 
 .playhead-time {

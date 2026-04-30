@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Canvas from './components/Canvas'
 import Timeline from './components/Timeline'
+import FFmpegSpike from './components/FFmpegSpike'
 import './App.css'
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
     <div className="app">
       <Canvas />
       <Timeline />
+      <FFmpegSpike />
       <div className="fps-counter">FPS: {fps}</div>
     </div>
   )
