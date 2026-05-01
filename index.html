@@ -1910,25 +1910,32 @@
             if (!duration || !isFinite(duration)) return;
             dispatch({ type: 'UPDATE_ASSET', id: asset.id, patch: { duration: round2(duration) } });
           };
+          const triggerConvert = () => {
+            // Null out handlers first — prevents re-entry when el.src is cleared
+            el.onloadedmetadata = null;
+            el.onerror = null;
+            el.src = '';
+            dispatch({ type: 'UPDATE_ASSET', id: asset.id, patch: { converting: true } });
+            convertToH264(asset, dispatch, pushToast);
+          };
           el.onloadedmetadata = () => {
             done(el.duration);
             if (asset.kind === 'video' && el.videoWidth === 0) {
-              // Container parsed but codec unsupported (HEVC etc.) — auto-convert
-              el.src = '';
-              dispatch({ type: 'UPDATE_ASSET', id: asset.id, patch: { converting: true } });
-              convertToH264(asset, dispatch, pushToast);
+              triggerConvert(); // container parsed but codec unsupported
             } else {
+              el.onloadedmetadata = null;
+              el.onerror = null;
               el.src = '';
             }
           };
           el.onerror = () => {
-            // MEDIA_ERR_SRC_NOT_SUPPORTED (code 4) = codec not supported at all
+            // MEDIA_ERR_SRC_NOT_SUPPORTED (code 4) = codec not supported
             if (asset.kind === 'video' && el.error?.code === 4) {
-              el.src = '';
-              dispatch({ type: 'UPDATE_ASSET', id: asset.id, patch: { converting: true } });
-              convertToH264(asset, dispatch, pushToast);
+              triggerConvert();
+            } else {
+              el.onloadedmetadata = null;
+              el.onerror = null;
             }
-            // else leave duration null — clip uses 3s fallback
           };
           el.src = asset.url;
         });
@@ -4140,7 +4147,14 @@
       _ffmpegLoading = ff.load({
         coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript'),
         wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
-      }).then(() => { _ffmpegInstance = ff; _ffmpegLoading = null; return ff; });
+      }).then(() => {
+        _ffmpegInstance = ff;
+        _ffmpegLoading = null;
+        return ff;
+      }).catch((err) => {
+        _ffmpegLoading = null; // reset so next attempt can retry
+        throw err;
+      });
       return _ffmpegLoading;
     }
 
