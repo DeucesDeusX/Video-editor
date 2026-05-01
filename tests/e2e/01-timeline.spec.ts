@@ -27,20 +27,23 @@ test.describe('Timeline & UI', () => {
     expect(text).not.toMatch(/^0\.0+s$/)
   })
 
-  test('drag clip to new position', async ({ page }) => {
+  test('right trim handle shortens clip width', async ({ page }) => {
     await importFile(page, FIXTURE)
     await waitForClip(page)
     const clip = page.locator('.lane-track .clip').first()
-    const box = await clip.boundingBox()
-    if (!box) throw new Error('Clip bounding box not found')
-    const startX = box.x + box.width / 2
-    const startY = box.y + box.height / 2
-    await page.mouse.move(startX, startY)
+    const origBox = await clip.boundingBox()
+    if (!origBox) throw new Error('Clip bounding box not found')
+    // Drag the right trim handle inward (left) to shorten the clip
+    const handle = clip.locator('.clip-handle.right')
+    const hBox = await handle.boundingBox()
+    if (!hBox) throw new Error('Right trim handle not found')
+    await page.mouse.move(hBox.x + hBox.width / 2, hBox.y + hBox.height / 2)
     await page.mouse.down()
-    await page.mouse.move(startX + 200, startY, { steps: 20 })
+    await page.mouse.move(hBox.x - 80, hBox.y + hBox.height / 2, { steps: 15 })
     await page.mouse.up()
     await page.waitForTimeout(200)
     const newBox = await clip.boundingBox()
-    expect(newBox!.x).toBeGreaterThan(box.x + 20)
+    // Clip should be narrower after trimming
+    expect(newBox!.width).toBeLessThan(origBox.width - 20)
   })
 })
