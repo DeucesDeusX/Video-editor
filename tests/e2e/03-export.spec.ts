@@ -20,8 +20,8 @@ test.describe('Export', () => {
   })
 
   test('Render MP4 triggers FFmpeg processing after import', async ({ page }) => {
-    await importFile(page, FIXTURE)
-    await waitForClip(page)
+    await importFile(page, FIXTURE)  // adds asset + double-clicks to put on timeline
+    await waitForClip(page)          // wait for clip to appear in lane
     await page.click('button:has-text("Export")')
     await expect(page.locator('.menu')).toBeVisible({ timeout: 5_000 })
     await page.click('.menu-title:has-text("MP4")')

@@ -11,16 +11,22 @@ export async function loadApp(page: Page) {
   await page.waitForSelector('.topbar .brand', { timeout: 20_000 })
 }
 
-/** Import a file via the library file input */
+/** Import a file and add it to the timeline.
+ *  Reel Lab flow: pick file → appears in library → double-click to add to main lane */
 export async function importFile(page: Page, filePath: string) {
+  // Open file picker
   const [fileChooser] = await Promise.all([
     page.waitForEvent('filechooser'),
     page.click('.rail-head label.btn')
   ])
   await fileChooser.setFiles(filePath)
+  // Wait for asset to appear in library grid
+  await page.waitForSelector('.asset-grid .asset', { timeout: 10_000 })
+  // Double-click the first asset to add it to the main timeline lane
+  await page.dblclick('.asset-grid .asset')
 }
 
-/** Wait for at least one clip to appear in any lane-track */
+/** Wait for at least one clip on the timeline (main-clip, overlay-clip, or music-clip) */
 export async function waitForClip(page: Page) {
   await page.waitForSelector('.lane-track .clip', { timeout: 10_000 })
 }
