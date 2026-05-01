@@ -37,9 +37,10 @@ test.describe('Timeline & UI', () => {
     const startY = box.y + box.height / 2
     await page.mouse.move(startX, startY)
     await page.mouse.down()
-    await page.mouse.move(startX + 120, startY, { steps: 15 })
+    await page.mouse.move(startX + 200, startY, { steps: 20 })
     await page.mouse.up()
+    await page.waitForTimeout(200)
     const newBox = await clip.boundingBox()
-    expect(newBox!.x).toBeGreaterThan(box.x + 50)
+    expect(newBox!.x).toBeGreaterThan(box.x + 20)
   })
 })

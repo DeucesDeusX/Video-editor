@@ -25,10 +25,7 @@ test.describe('Export', () => {
     await page.click('button:has-text("Export")')
     await expect(page.locator('.menu')).toBeVisible({ timeout: 5_000 })
     await page.click('.menu-title:has-text("MP4")')
-    // FFmpeg loading/progress indicator should appear within 15s
-    await expect(
-      page.locator('.export-progress, .modal, [class*="progress"], [class*="render"]')
-        .or(page.locator('text=/render|ffmpeg|encoding/i'))
-    ).toBeVisible({ timeout: 15_000 })
+    // Reel Lab shows .modal-backdrop with h2 "Rendering MP4…" and a .progress-bar
+    await expect(page.locator('.modal-backdrop')).toBeVisible({ timeout: 15_000 })
   })
 })
