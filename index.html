@@ -1,29 +1,4414 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Video Editor - Spike 1</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reel Lab v0.7</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0d13;
+      --panel: #10141d;
+      --panel-2: #161b27;
+      --panel-3: #1c2333;
+      --line: #242c3f;
+      --line-2: #323c54;
+      --text: #e8ecf5;
+      --muted: #8d99b0;
+      --mutedder: #5e6a82;
+      --accent: #7ea3ff;
+      --accent-2: #5a82dc;
+      --good: #6ce0b6;
+      --warn: #f4c166;
+      --bad: #ff7a85;
+      --overlay-hue: 162;
+      --main-hue: 218;
+      --music-hue: 40;
+      --radius: 8px;
+      --radius-sm: 5px;
+      --radius-lg: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+
+    body {
+      font-family: 'Geist', -apple-system, system-ui, sans-serif;
+      font-feature-settings: 'cv11', 'ss01';
+      color: var(--text);
+      background: var(--bg);
+      overflow: hidden;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #root {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- scrollbars --- */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--mutedder); }
+
+    /* --- typography --- */
+    .font-mono { font-family: 'Geist Mono', ui-monospace, monospace; }
+    .muted { color: var(--muted); }
+    .micro { font-size: 11px; color: var(--muted); }
+    .sec-label {
+      font-size: 10px; font-weight: 500; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--mutedder);
+    }
+
+    /* --- form elements --- */
+    button, input, select, textarea {
+      font: inherit; color: inherit; background: transparent; border: none; outline: none;
+    }
+    button { cursor: pointer; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; padding: 5px 10px; min-height: 26px;
+      background: var(--panel-2); border: 1px solid var(--line);
+      border-radius: var(--radius-sm); font-size: 12px; color: var(--text);
+      transition: border-color .12s, background .12s, transform .08s;
+      white-space: nowrap;
+    }
+    .btn:hover:not(:disabled) { border-color: var(--line-2); background: var(--panel-3); }
+    .btn:active:not(:disabled) { transform: translateY(1px); }
+    .btn:disabled { opacity: .35; cursor: default; }
+    .btn.primary {
+      background: linear-gradient(180deg, rgba(126,163,255,.22), rgba(126,163,255,.08)), var(--panel-2);
+      border-color: rgba(126,163,255,.35);
+    }
+    .btn.primary:hover:not(:disabled) { border-color: rgba(126,163,255,.55); }
+    .btn.good {
+      background: linear-gradient(180deg, rgba(108,224,182,.18), rgba(108,224,182,.06)), var(--panel-2);
+      border-color: rgba(108,224,182,.3);
+    }
+    .btn.warn {
+      background: linear-gradient(180deg, rgba(244,193,102,.18), rgba(244,193,102,.05)), var(--panel-2);
+      border-color: rgba(244,193,102,.3);
+    }
+    .btn.ghost { background: transparent; border-color: transparent; }
+    .btn.ghost:hover:not(:disabled) { background: var(--panel-2); border-color: var(--line); }
+    .btn.tiny { min-height: 22px; padding: 2px 8px; font-size: 11px; border-radius: 4px; }
+    .btn.icon { width: 26px; padding: 0; }
+    .btn.active {
+      background: var(--panel-3); border-color: var(--accent-2);
+      color: var(--accent);
+    }
+
+    .field {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .field > label {
+      font-size: 10px; font-weight: 500; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--mutedder);
+    }
+    .field input[type=text], .field input[type=number], .field select, .field textarea,
+    .inp {
+      width: 100%; padding: 6px 9px; background: var(--panel);
+      border: 1px solid var(--line); border-radius: var(--radius-sm);
+      font-size: 12px; color: var(--text);
+      transition: border-color .12s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus,
+    .inp:focus { border-color: var(--accent-2); }
+
+    input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      height: 3px; background: var(--line); border-radius: 2px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--accent); cursor: pointer; border: none;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--accent); cursor: pointer; border: none;
+    }
+
+    input[type=file] { display: none; }
+
+    /* --- top bar --- */
+    .topbar {
+      height: 44px; padding: 0 14px; flex-shrink: 0;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      z-index: 50;
+    }
+    .topbar .brand {
+      font-size: 13px; font-weight: 500; letter-spacing: -.01em;
+      color: var(--text);
+    }
+    .topbar .brand::after {
+      content: ''; display: inline-block; width: 6px; height: 6px;
+      background: var(--good); border-radius: 50%; margin-left: 8px;
+      vertical-align: middle;
+    }
+    .topbar .divider {
+      width: 1px; height: 16px; background: var(--line);
+    }
+    .topbar .project-name {
+      background: transparent; border: 1px solid transparent;
+      padding: 4px 8px; border-radius: 4px; font-size: 13px;
+      font-weight: 400; min-width: 140px; color: var(--text);
+    }
+    .topbar .project-name:hover { border-color: var(--line); }
+    .topbar .project-name:focus { border-color: var(--accent-2); background: var(--panel-2); }
+    .topbar .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; background: var(--panel-2);
+      border: 1px solid var(--line); border-radius: 12px;
+      font-size: 11px; color: var(--muted);
+    }
+    .topbar .chip.live {
+      color: var(--good); border-color: rgba(108,224,182,.3);
+      background: rgba(108,224,182,.08);
+    }
+    .topbar .saved {
+      font-size: 11px; color: var(--mutedder); font-family: 'Geist Mono', monospace;
+    }
+
+    /* --- workspace --- */
+    .workspace {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    /* --- left rail --- */
+    .rail {
+      width: 200px; flex-shrink: 0;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .rail.collapsed { width: 44px; }
+    .rail-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px; border-bottom: 1px solid var(--line);
+      font-size: 11px; font-weight: 500; color: var(--muted);
+      letter-spacing: .04em;
+    }
+    .rail-body {
+      flex: 1; overflow-y: auto; padding: 10px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .rail.collapsed .rail-body { display: none; }
+
+    .shelf { display: flex; flex-direction: column; gap: 6px; }
+    .shelf-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 6px;
+    }
+
+    /* asset grid */
+    .asset-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+    }
+    .asset {
+      aspect-ratio: 1; border: 1px solid var(--line);
+      border-radius: var(--radius-sm); background: var(--panel-2);
+      cursor: pointer; overflow: hidden; position: relative;
+      transition: border-color .12s, transform .08s;
+    }
+    .asset:hover { border-color: var(--line-2); }
+    .asset.selected { border-color: var(--accent); }
+    .asset.dragging { opacity: .4; }
+    .asset img, .asset video {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      pointer-events: none;
+    }
+    .asset .kind {
+      position: absolute; bottom: 3px; right: 3px;
+      font-family: 'Geist Mono', monospace; font-size: 8px;
+      padding: 1px 4px; background: rgba(0,0,0,.65); color: #fff;
+      border-radius: 2px; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .asset .ref-flag {
+      position: absolute; top: 3px; left: 3px;
+      font-size: 9px; padding: 1px 5px;
+      background: var(--warn); color: #000;
+      border-radius: 2px; font-weight: 500;
+    }
+    .asset .converting-badge {
+      position: absolute; top: 3px; left: 3px;
+      font-size: 11px; padding: 1px 4px;
+      background: rgba(126,163,255,.9); color: #fff;
+      border-radius: 2px; font-weight: 700;
+      animation: spin-badge .8s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin-badge { to { transform: rotate(360deg); } }
+    .asset-placeholder {
+      aspect-ratio: 1; border: 1px dashed var(--line-2);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--mutedder); font-size: 16px;
+      cursor: pointer;
+      transition: border-color .12s;
+    }
+    .asset-placeholder:hover { border-color: var(--accent-2); color: var(--accent); }
+    .asset-empty {
+      grid-column: 1 / -1;
+      padding: 16px 4px; text-align: center;
+      color: var(--mutedder); font-size: 11px;
+      line-height: 1.5;
+    }
+
+    /* color ref strip */
+    .ref-strip {
+      display: flex; gap: 4px; flex-wrap: wrap;
+    }
+    .ref-chip {
+      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      border: 1px solid var(--line); overflow: hidden;
+      cursor: pointer; position: relative;
+      transition: border-color .12s;
+    }
+    .ref-chip:hover { border-color: var(--line-2); }
+    .ref-chip.active { border-color: var(--warn); box-shadow: 0 0 0 1px rgba(244,193,102,.3); }
+    .ref-chip img { width: 100%; height: 100%; object-fit: cover; }
+    .ref-chip .rm {
+      position: absolute; top: -4px; right: -4px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--bad); color: #000;
+      font-size: 10px; font-weight: 600;
+      display: none; align-items: center; justify-content: center;
+      border: 1px solid var(--bg);
+    }
+    .ref-chip:hover .rm { display: flex; }
+
+    /* brand shelf */
+    .brand-box {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px; background: var(--panel-2);
+      border: 1px solid var(--line); border-radius: var(--radius-sm);
+    }
+    .brand-box img {
+      width: 24px; height: 24px; object-fit: contain;
+      background: #fff2; border-radius: 3px; flex-shrink: 0;
+    }
+    .brand-box .name {
+      font-size: 11px; color: var(--muted);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* --- preview --- */
+    .stage-wrap {
+      flex: 1; display: flex; flex-direction: column;
+      min-width: 0; min-height: 0;
+      overflow: hidden;
+    }
+    .stage {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+      background: radial-gradient(ellipse at center, #0d1018 0%, #06080d 85%);
+      min-height: 0; min-width: 0;
+      padding: 20px;
+    }
+    .stage-canvas {
+      position: relative;
+      background: #000;
+      /* dimensions are set inline by PreviewStage (fit to stage, preserve format ratio) */
+      box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 0 1px var(--line);
+      border-radius: 2px;
+      overflow: hidden;
+      cursor: grab;
+      flex-shrink: 0;
+    }
+    .stage-canvas.dragging { cursor: grabbing; }
+    .stage-canvas.no-drag { cursor: default; }
+    .stage-shot {
+      /* the transformed layer (scale + offset) — sits inside the locked frame */
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      transform-origin: center center;
+    }
+    .stage-video, .stage-img, .stage-audio-viz {
+      width: 100%; height: 100%; display: block;
+      background: #000;
+      object-fit: contain;
+    }
+    /* GL canvas: sits on top of the source, same box, renders the graded output. */
+    .stage-gl-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      display: block;
+      pointer-events: none;
+    }
+    /* GL canvas sits on top when active — video stays visible as fallback if GL fails */
+    .stage-shot.gl-active .stage-video,
+    .stage-shot.gl-active .stage-img {
+      opacity: 1;
+    }
+
+    /* corner resize handles on the main shot */
+    .resize-corner {
+      position: absolute;
+      width: 16px; height: 16px;
+      z-index: 6;
+      pointer-events: auto;
+    }
+    .resize-corner::after {
+      content: '';
+      position: absolute; inset: 5px;
+      border: 1.5px solid var(--accent);
+      background: rgba(126,163,255,.15);
+      border-radius: 2px;
+      transition: transform .12s, background .12s, border-color .12s;
+    }
+    .resize-corner:hover::after { transform: scale(1.25); background: rgba(126,163,255,.4); border-color: var(--text); }
+    .resize-corner.tl { top: 4px; left: 4px; cursor: nwse-resize; }
+    .resize-corner.tr { top: 4px; right: 4px; cursor: nesw-resize; }
+    .resize-corner.bl { bottom: 4px; left: 4px; cursor: nesw-resize; }
+    .resize-corner.br { bottom: 4px; right: 4px; cursor: nwse-resize; }
+
+    /* rule-of-thirds grid overlay */
+    .stage-grid {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 4;
+      background-image:
+        linear-gradient(to right, transparent 33.33%, rgba(255,255,255,.25) 33.33%, rgba(255,255,255,.25) 33.66%, transparent 33.66%, transparent 66.33%, rgba(255,255,255,.25) 66.33%, rgba(255,255,255,.25) 66.66%, transparent 66.66%),
+        linear-gradient(to bottom, transparent 33.33%, rgba(255,255,255,.25) 33.33%, rgba(255,255,255,.25) 33.66%, transparent 33.66%, transparent 66.33%, rgba(255,255,255,.25) 66.33%, rgba(255,255,255,.25) 66.66%, transparent 66.66%);
+    }
+    .stage-grid::after {
+      /* center crosshair */
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 18px; height: 18px;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 50%;
+    }
+    .grid-toggle {
+      position: absolute; bottom: 10px; right: 10px;
+      z-index: 8;
+      padding: 3px 8px; font-size: 10px;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px;
+      color: #fff; opacity: .45;
+      transition: opacity .15s;
+      cursor: pointer;
+    }
+    .grid-toggle:hover { opacity: 1; }
+    .grid-toggle.active { opacity: 1; border-color: var(--accent); color: var(--accent); }
+
+    /* overlay clip on stage — gets resize handles when selected */
+    .stage-overlay-wrap {
+      position: absolute;
+      z-index: 3;
+    }
+    .stage-overlay-wrap.selected {
+      outline: 1px dashed var(--accent);
+      outline-offset: 2px;
+    }
+    .stage-overlay-wrap.selected .resize-corner { display: block; }
+    .stage-overlay-wrap .resize-corner { display: none; }
+
+    /* clip dot for match queue */
+    .clip-queued-dot {
+      position: absolute; top: 4px; left: 4px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--warn);
+      box-shadow: 0 0 4px rgba(244,193,102,.8);
+      z-index: 3;
+    }
+
+    /* ───── transitions ───── */
+    /* Layer that sits above stage-shot during a transition to render incoming clip */
+    .stage-transition-layer {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .stage-transition-media {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+    /* Timeline: diamond between clips indicating transition */
+    .transition-marker {
+      position: absolute; top: 50%;
+      width: 16px; height: 16px;
+      transform: translate(-50%, -50%) rotate(45deg);
+      background: var(--panel-3);
+      border: 1.5px solid var(--line-2);
+      cursor: pointer;
+      z-index: 15;
+      transition: background .15s, border-color .15s, transform .15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .transition-marker:hover {
+      background: var(--panel);
+      border-color: var(--accent);
+      transform: translate(-50%, -50%) rotate(45deg) scale(1.15);
+    }
+    .transition-marker.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .transition-marker.active::after {
+      content: '';
+      width: 5px; height: 5px;
+      background: var(--bg);
+      border-radius: 50%;
+    }
+    .transition-popover {
+      position: fixed;
+      background: var(--panel-2);
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      box-shadow: 0 20px 40px rgba(0,0,0,.5);
+      z-index: 250;
+      padding: 10px;
+      min-width: 220px;
+    }
+    .transition-popover .trans-row {
+      display: grid; grid-template-columns: 1fr;
+      gap: 2px;
+    }
+    .transition-popover .trans-opt {
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background .1s, color .1s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .transition-popover .trans-opt:hover { background: var(--panel-3); color: var(--text); }
+    .transition-popover .trans-opt.active { color: var(--accent); background: rgba(126,163,255,.08); }
+    .transition-popover .trans-opt .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--line-2);
+      flex-shrink: 0;
+    }
+    .transition-popover .trans-opt.active .dot { background: var(--accent); }
+    .stage-audio-viz {
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 12px;
+    }
+    .stage-overlay {
+      position: absolute; pointer-events: none;
+      max-width: 30%; max-height: 30%;
+      object-fit: contain;
+    }
+    .stage-empty {
+      color: var(--mutedder); font-size: 13px;
+      text-align: center; padding: 32px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .stage-empty .icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      border: 1.5px dashed var(--line-2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: var(--mutedder);
+    }
+    .stage-badge {
+      position: absolute; top: 12px; left: 12px;
+      padding: 4px 10px; background: rgba(0,0,0,.55);
+      backdrop-filter: blur(8px);
+      border-radius: 12px; font-size: 10px;
+      font-family: 'Geist Mono', monospace;
+      color: #fff; letter-spacing: .05em;
+    }
+    .stage-tc {
+      position: absolute; top: 12px; right: 12px;
+      padding: 4px 10px; background: rgba(0,0,0,.55);
+      backdrop-filter: blur(8px);
+      border-radius: 12px; font-size: 10px;
+      font-family: 'Geist Mono', monospace;
+      color: #fff;
+    }
+
+    /* transport */
+    .transport {
+      flex-shrink: 0;
+      padding: 10px 14px;
+      display: flex; align-items: center; gap: 12px;
+      background: var(--panel);
+      border-top: 1px solid var(--line);
+    }
+    .transport .scrub {
+      flex: 1; position: relative; height: 24px;
+      display: flex; align-items: center;
+    }
+    .transport .scrub input[type=range] {
+      width: 100%;
+    }
+    .tc {
+      font-family: 'Geist Mono', monospace; font-size: 11px;
+      color: var(--muted); white-space: nowrap;
+    }
+
+    /* --- timeline --- */
+    .timeline-wrap {
+      height: 220px; flex-shrink: 0;
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .timeline-head {
+      height: 32px; padding: 0 12px; flex-shrink: 0;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .timeline-head .zoom-group {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .timeline-head .zoom-group input[type=range] {
+      width: 80px;
+    }
+
+    .timeline-body {
+      flex: 1; overflow-x: auto; overflow-y: hidden;
+      position: relative;
+    }
+    .ruler {
+      height: 22px; position: sticky; top: 0; z-index: 5;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: flex-end;
+      padding-bottom: 3px;
+      position: relative;
+    }
+    .ruler-tick {
+      position: absolute; top: 0; bottom: 0;
+      border-left: 1px solid var(--line);
+      padding-left: 4px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 9px; color: var(--mutedder);
+      display: flex; align-items: flex-end; padding-bottom: 2px;
+    }
+
+    .lanes {
+      position: relative;
+    }
+
+    .lane {
+      height: 48px; position: relative;
+      display: flex; align-items: stretch;
+      border-bottom: 1px solid var(--line);
+    }
+    .lane:last-child { border-bottom: none; }
+    .lane-label {
+      width: 60px; flex-shrink: 0;
+      padding: 0 8px; display: flex; flex-direction: column; justify-content: center;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      font-size: 10px; color: var(--muted); font-weight: 500;
+      text-transform: uppercase; letter-spacing: .05em;
+      position: sticky; left: 0; z-index: 4;
+    }
+    .lane-label .hint {
+      font-size: 9px; color: var(--mutedder);
+      text-transform: none; letter-spacing: 0;
+      font-weight: 400;
+    }
+    .lane-track {
+      flex: 1; position: relative; background: var(--panel-2);
+      min-width: 600px;
+    }
+    .playhead {
+      position: absolute; top: 0; bottom: 0;
+      width: 20px;
+      transform: translateX(-10px);
+      cursor: ew-resize;
+      z-index: 22;
+    }
+    .playhead.dragging { cursor: grabbing; }
+    .playhead-line {
+      position: absolute; left: 10px; top: 0; bottom: 0;
+      width: 1px; background: var(--good);
+      box-shadow: 0 0 6px rgba(108,224,182,.7);
+      pointer-events: none;
+    }
+    .playhead-head {
+      position: absolute; left: 5px; top: -3px;
+      width: 11px; height: 11px;
+      background: var(--good);
+      transform: rotate(45deg);
+      pointer-events: none;
+      box-shadow: 0 0 6px rgba(108,224,182,.5);
+    }
+    .playhead:hover .playhead-line { box-shadow: 0 0 10px rgba(108,224,182,.9); }
+    .playhead:hover .playhead-head { transform: rotate(45deg) scale(1.15); }
+
+    .clip {
+      position: absolute; top: 4px; bottom: 4px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      cursor: grab;
+      transition: border-color .1s, box-shadow .1s;
+      display: flex; flex-direction: column;
+    }
+    .clip:active { cursor: grabbing; }
+    .clip.main-clip {
+      background: hsl(var(--main-hue), 40%, 28%);
+      border: 1px solid hsl(var(--main-hue), 50%, 42%);
+    }
+    .clip.overlay-clip {
+      background: hsl(var(--overlay-hue), 35%, 22%);
+      border: 1px solid hsl(var(--overlay-hue), 50%, 38%);
+    }
+    .clip.music-clip {
+      background: hsl(var(--music-hue), 35%, 22%);
+      border: 1px solid hsl(var(--music-hue), 50%, 40%);
+    }
+    .clip.selected {
+      box-shadow: 0 0 0 1px var(--accent), 0 0 10px rgba(126,163,255,.25);
+      border-color: var(--accent);
+    }
+    .clip.active-play {
+      box-shadow: 0 0 0 1px var(--good), inset 0 0 0 1px rgba(108,224,182,.2);
+    }
+    .clip-thumb {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+      opacity: .32; pointer-events: none;
+    }
+    .clip-body {
+      position: relative; z-index: 2;
+      flex: 1; padding: 3px 10px 3px 8px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .clip-label {
+      font-size: 10px; font-weight: 500; color: #fff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+    .clip-meta {
+      font-family: 'Geist Mono', monospace;
+      font-size: 9px; color: rgba(255,255,255,.75);
+    }
+    .clip-handle {
+      position: absolute; top: 0; bottom: 0; width: 6px;
+      cursor: ew-resize; z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .clip-handle::after {
+      content: ''; width: 2px; height: 50%;
+      background: rgba(255,255,255,.5);
+      border-radius: 1px;
+    }
+    .clip-handle:hover::after { background: #fff; }
+    .clip-handle.left { left: 0; }
+    .clip-handle.right { right: 0; }
+    .clip-speed-badge {
+      position: absolute; top: 2px; right: 10px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 8px; color: var(--warn);
+      font-weight: 500;
+      z-index: 3;
+    }
+    .clip-grade-dot {
+      position: absolute; top: 4px; right: 4px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 4px rgba(126,163,255,.7);
+      z-index: 3;
+    }
+
+    .drop-indicator {
+      position: absolute; top: 2px; bottom: 2px;
+      width: 2px; background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      z-index: 15; pointer-events: none;
+    }
+
+    /* --- right drawer --- */
+    .drawer {
+      width: 320px; flex-shrink: 0;
+      border-left: 1px solid var(--line);
+      background: var(--panel);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .drawer.collapsed { width: 0; border-left: none; }
+    .drawer-tabs {
+      display: flex; flex-shrink: 0;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+    .drawer-tab {
+      flex: 1; padding: 11px 8px; font-size: 11px;
+      color: var(--muted); font-weight: 500;
+      border-bottom: 2px solid transparent;
+      text-align: center; cursor: pointer;
+      transition: color .12s, border-color .12s;
+    }
+    .drawer-tab:hover { color: var(--text); }
+    .drawer-tab.active {
+      color: var(--text); border-bottom-color: var(--accent);
+    }
+    .drawer-body {
+      flex: 1; overflow-y: auto; padding: 14px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .drawer-body h3 {
+      font-size: 12px; font-weight: 500; color: var(--text);
+      margin-bottom: 6px;
+    }
+    .drawer-body p.hint {
+      font-size: 11px; color: var(--muted); line-height: 1.5;
+    }
+
+    /* CG sliders */
+    .slider-row {
+      display: grid; grid-template-columns: 70px 1fr 42px;
+      gap: 8px; align-items: center;
+    }
+    .slider-row label {
+      font-size: 11px; color: var(--muted);
+    }
+    .slider-row .val {
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px; color: var(--muted); text-align: right;
+    }
+    .preset-row {
+      display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;
+    }
+    .preset-chip {
+      padding: 3px 8px; font-size: 10px;
+      background: var(--panel-2); border: 1px solid var(--line);
+      border-radius: 4px; color: var(--muted); cursor: pointer;
+      transition: border-color .12s, color .12s;
+    }
+    .preset-chip:hover { border-color: var(--line-2); color: var(--text); }
+    .preset-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(126,163,255,.08); }
+
+    /* AI tab cards */
+    .ai-card {
+      padding: 10px 12px; background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .ai-card h4 {
+      font-size: 12px; font-weight: 500;
+    }
+    .ai-card .desc {
+      font-size: 10px; color: var(--muted); line-height: 1.4;
+    }
+    .ai-card .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .ai-card.real { border-color: rgba(108,224,182,.25); }
+    .ai-card.stub { opacity: .85; }
+    .ai-card .stub-tag {
+      font-size: 9px; padding: 1px 5px; background: var(--line);
+      border-radius: 3px; color: var(--muted);
+      font-family: 'Geist Mono', monospace; letter-spacing: .05em;
+    }
+
+    /* brief */
+    .brief-box {
+      flex: 1; padding: 10px;
+      background: var(--panel-2);
+      border: 1px solid var(--line); border-radius: var(--radius-sm);
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px; color: var(--muted);
+      white-space: pre-wrap; line-height: 1.55;
+      overflow: auto; min-height: 200px;
+    }
+
+    /* match tab */
+    .match-preview {
+      display: flex; gap: 6px; padding: 8px;
+      background: var(--panel-2); border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+    }
+    .swatch-stack {
+      display: flex; flex-direction: column; gap: 2px; flex: 1;
+    }
+    .swatch-row {
+      display: flex; gap: 2px; height: 14px;
+    }
+    .swatch-dot {
+      flex: 1; border-radius: 2px; min-width: 8px;
+    }
+    .swatch-label {
+      font-size: 9px; color: var(--mutedder);
+      font-family: 'Geist Mono', monospace; letter-spacing: .05em;
+    }
+
+    /* --- contextual toolbar --- */
+    .toolbar {
+      height: 52px; flex-shrink: 0;
+      padding: 0 14px; display: flex; align-items: center; gap: 12px;
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+      overflow-x: auto;
+    }
+    .toolbar-context {
+      font-size: 10px; font-weight: 500; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--mutedder);
+      white-space: nowrap;
+    }
+    .toolbar-divider {
+      width: 1px; height: 20px; background: var(--line); flex-shrink: 0;
+    }
+    .toolbar-group {
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .toolbar-spacer { flex: 1; min-width: 10px; }
+
+    .inline-field {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 8px; background: var(--panel-2);
+      border: 1px solid var(--line); border-radius: 4px;
+      font-size: 11px; color: var(--muted);
+      white-space: nowrap;
+    }
+    .inline-field .label {
+      color: var(--mutedder); font-size: 10px;
+    }
+    .inline-field input[type=number] {
+      width: 44px; padding: 2px 4px; background: transparent;
+      border: none; text-align: right;
+      font-family: 'Geist Mono', monospace; font-size: 11px;
+      color: var(--text);
+    }
+    .inline-field input[type=number]:focus { outline: 1px solid var(--accent-2); }
+
+    /* export menu */
+    .menu-wrap { position: relative; }
+    .menu {
+      position: absolute; top: calc(100% + 4px); right: 0;
+      min-width: 240px; background: var(--panel-2);
+      border: 1px solid var(--line-2); border-radius: var(--radius);
+      box-shadow: 0 20px 40px rgba(0,0,0,.5);
+      z-index: 100; overflow: hidden;
+      padding: 4px;
+    }
+    .menu-item {
+      padding: 9px 12px; cursor: pointer;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: flex-start; gap: 10px;
+      transition: background .1s;
+    }
+    .menu-item:hover { background: var(--panel-3); }
+    .menu-item:disabled { opacity: .4; cursor: default; }
+    .menu-item .menu-title {
+      font-size: 12px; font-weight: 500; color: var(--text);
+    }
+    .menu-item .menu-desc {
+      font-size: 10px; color: var(--muted); margin-top: 2px;
+    }
+    .menu-divider { height: 1px; background: var(--line); margin: 4px 0; }
+
+    /* modal */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(5,7,12,.8); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal {
+      background: var(--panel-2); border: 1px solid var(--line-2);
+      border-radius: var(--radius-lg); padding: 24px;
+      min-width: 400px; max-width: 540px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    }
+    .modal h2 {
+      font-size: 15px; font-weight: 500; margin-bottom: 14px;
+    }
+    .modal p {
+      font-size: 12px; color: var(--muted); line-height: 1.6;
+      margin-bottom: 14px;
+    }
+    .modal .progress-bar {
+      height: 6px; background: var(--line); border-radius: 3px;
+      overflow: hidden; margin-bottom: 10px;
+    }
+    .modal .progress-fill {
+      height: 100%; background: var(--accent);
+      transition: width .2s;
+    }
+    .modal .log {
+      font-family: 'Geist Mono', monospace; font-size: 10px;
+      color: var(--mutedder); max-height: 120px; overflow: auto;
+      background: var(--panel); padding: 8px; border-radius: 4px;
+      white-space: pre-wrap;
+    }
+    .modal .row-end {
+      display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;
+    }
+
+    /* toast */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px; z-index: 300;
+      display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      padding: 10px 14px; background: var(--panel-2);
+      border: 1px solid var(--line-2); border-radius: var(--radius);
+      font-size: 12px; color: var(--text);
+      box-shadow: 0 10px 30px rgba(0,0,0,.4);
+      min-width: 220px;
+      animation: toast-in .2s ease-out;
+    }
+    .toast.good { border-color: rgba(108,224,182,.35); }
+    .toast.warn { border-color: rgba(244,193,102,.35); }
+    .toast.bad { border-color: rgba(255,122,133,.35); }
+    @keyframes toast-in {
+      from { transform: translateX(20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* responsive */
+    @media (max-width: 1100px) {
+      .drawer { width: 280px; }
+      .rail { width: 170px; }
+    }
+    @media (max-width: 900px) {
+      .rail, .drawer { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.3.1",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+        "@ffmpeg/ffmpeg": "https://esm.sh/@ffmpeg/ffmpeg@0.12.10",
+        "@ffmpeg/util": "https://esm.sh/@ffmpeg/util@0.12.1",
+        "@imgly/background-removal": "https://esm.sh/@imgly/background-removal@1.6.0"
       }
-      html, body, #root {
-        width: 100%;
-        height: 100%;
+    }
+  </script>
+
+  <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+
+  <script type="text/babel" data-type="module" data-presets="react">
+    import React, { useState, useEffect, useLayoutEffect, useRef, useReducer, useCallback, useMemo } from 'react';
+    import { createRoot } from 'react-dom/client';
+
+    // ──────────────────────────────────────────────────────────────
+    //   CONSTANTS
+    // ──────────────────────────────────────────────────────────────
+    const STORAGE_KEY = 'reel-lab-v7';
+    const FORMATS = {
+      '9:16': { w: 1080, h: 1920, label: '9:16 portrait' },
+      '1:1':  { w: 1080, h: 1080, label: '1:1 square' },
+      '16:9': { w: 1920, h: 1080, label: '16:9 landscape' },
+    };
+    const GRADE_PRESETS = {
+      flat:           { brightness: 1.00, contrast: 1.00, saturate: 1.00, blacks: 0.00 },
+      'premium dark': { brightness: 0.95, contrast: 1.25, saturate: 1.15, blacks: -0.08 },
+      punchy:         { brightness: 1.03, contrast: 1.32, saturate: 1.28, blacks: -0.05 },
+      soft:           { brightness: 1.08, contrast: 0.92, saturate: 0.92, blacks: 0.04 },
+    };
+    const SPEED_PRESETS = [0.25, 0.5, 0.75, 1, 1.5, 2, 4, 8];
+
+    // Transitions — how a clip enters from the previous one.
+    // Each has: id, label, maxDuration, and ffmpeg name (for xfade).
+    const TRANSITIONS = {
+      cut:        { label: 'Cut',          maxDur: 0,   ffmpeg: null },
+      dissolve:   { label: 'Dissolve',     maxDur: 2,   ffmpeg: 'fade' },
+      fadeBlack:  { label: 'Fade to black',maxDur: 2,   ffmpeg: 'fadeblack' },
+      fadeWhite:  { label: 'Dip to white', maxDur: 2,   ffmpeg: 'fadewhite' },
+      wipeLeft:   { label: 'Wipe ←',       maxDur: 1.5, ffmpeg: 'wipeleft' },
+      wipeRight:  { label: 'Wipe →',       maxDur: 1.5, ffmpeg: 'wiperight' },
+      whipBlur:   { label: 'Whip blur',    maxDur: 0.8, ffmpeg: 'smoothleft' },
+    };
+    const DEFAULT_TRANSITION_DUR = 0.5;
+
+    // ──────────────────────────────────────────────────────────────
+    //   STATE & REDUCER
+    // ──────────────────────────────────────────────────────────────
+    function defaultState() {
+      return {
+        projectName: 'Fire and Ash Reel',
+        format: '9:16',
+        targetLength: 15,
+        assets: [], // {id, name, kind, url, sizeLabel, isRef, isBrand}
+        savedMeta: [], // for persistence (blob urls die)
+        tracks: {
+          overlay: [], // clips on overlay lane
+          main: [],    // clips on main lane (sequential)
+          music: [],   // music track
+        },
+        playhead: 0,
+        isPlaying: false,
+        zoom: 1,
+        selection: { track: null, itemId: null },
+        currentPreviewAssetId: null,
+        showGrid: false, // rule-of-thirds on preview
+        // project-wide grade (applied to preview, bakeable to clips)
+        projectGrade: { brightness: 1, contrast: 1, saturate: 1, blacks: 0, warmth: 0, preset: 'flat' },
+        // tone match: ref palette + strength + queue of clip ids to receive matched grade
+        colorMatch: { refAssetId: null, strength: 0.4, refPalette: null, queue: [] },
+        // music bed options
+        music: { volume: 0.8, fadeIn: 0.3, fadeOut: 0.5, loopIfShort: true, muteMainOnMusic: true },
+        // notes
+        sessionNotes: '',
+      };
+    }
+
+    function reducer(state, action) {
+      switch (action.type) {
+        case 'REPLACE':
+          return action.state;
+        case 'PATCH':
+          return { ...state, ...action.patch };
+        case 'ADD_ASSETS': {
+          const next = [...state.assets, ...action.assets];
+          return { ...state, assets: next, currentPreviewAssetId: state.currentPreviewAssetId || action.assets[0]?.id || null };
+        }
+        case 'REMOVE_ASSET': {
+          const next = state.assets.filter(a => a.id !== action.id);
+          const stripTracks = { ...state.tracks };
+          Object.keys(stripTracks).forEach(t => {
+            stripTracks[t] = stripTracks[t].filter(c => c.assetId !== action.id);
+          });
+          return {
+            ...state,
+            assets: next,
+            tracks: stripTracks,
+            currentPreviewAssetId: state.currentPreviewAssetId === action.id ? (next[0]?.id || null) : state.currentPreviewAssetId,
+          };
+        }
+        case 'UPDATE_ASSET': {
+          const next = state.assets.map(a => a.id === action.id ? { ...a, ...action.patch } : a);
+          return { ...state, assets: next };
+        }
+        case 'TOGGLE_REF': {
+          const next = state.assets.map(a => a.id === action.id ? { ...a, isRef: !a.isRef } : a);
+          return { ...state, assets: next };
+        }
+        case 'SET_BRAND_ASSET': {
+          // only one brand asset at a time
+          const next = state.assets.map(a => ({ ...a, isBrand: a.id === action.id ? !a.isBrand : false }));
+          return { ...state, assets: next };
+        }
+        case 'SET_PREVIEW':
+          return { ...state, currentPreviewAssetId: action.id };
+        case 'ADD_CLIP': {
+          const newTracks = { ...state.tracks };
+          newTracks[action.track] = [...newTracks[action.track], action.clip];
+          return { ...state, tracks: newTracks, selection: { track: action.track, itemId: action.clip.id } };
+        }
+        case 'UPDATE_CLIP': {
+          const newTracks = { ...state.tracks };
+          newTracks[action.track] = newTracks[action.track].map(c =>
+            c.id === action.id ? { ...c, ...action.patch } : c
+          );
+          return { ...state, tracks: newTracks };
+        }
+        case 'REMOVE_CLIP': {
+          const newTracks = { ...state.tracks };
+          newTracks[action.track] = newTracks[action.track].filter(c => c.id !== action.id);
+          const nextSel = (state.selection.track === action.track && state.selection.itemId === action.id)
+            ? { track: null, itemId: null } : state.selection;
+          return { ...state, tracks: newTracks, selection: nextSel };
+        }
+        case 'REORDER_CLIPS': {
+          const newTracks = { ...state.tracks };
+          const items = [...newTracks[action.track]];
+          const [moved] = items.splice(action.from, 1);
+          items.splice(action.to, 0, moved);
+          newTracks[action.track] = items;
+          return { ...state, tracks: newTracks };
+        }
+        case 'SPLIT_CLIP': {
+          // only for main track
+          const items = state.tracks.main;
+          const idx = items.findIndex(c => c.id === action.id);
+          if (idx < 0) return state;
+          const orig = items[idx];
+          const starts = getMainStarts(items);
+          const clipStart = starts[idx];
+          const localOffset = state.playhead - clipStart;
+          if (localOffset <= 0.05 || localOffset >= orig.duration - 0.05) return state;
+          const a = { ...orig, duration: round2(localOffset) };
+          const b = {
+            ...orig,
+            id: newId('clip'),
+            trimStart: round2(orig.trimStart + localOffset),
+            duration: round2(orig.duration - localOffset),
+          };
+          const newMain = [...items.slice(0, idx), a, b, ...items.slice(idx + 1)];
+          return {
+            ...state,
+            tracks: { ...state.tracks, main: newMain },
+            selection: { track: 'main', itemId: b.id },
+          };
+        }
+        case 'SET_PLAYHEAD':
+          return { ...state, playhead: Math.max(0, action.t) };
+        case 'SET_PLAYING':
+          return { ...state, isPlaying: action.playing };
+        case 'SET_ZOOM':
+          return { ...state, zoom: Math.max(0.25, Math.min(20, action.zoom)) };
+        case 'SELECT':
+          return { ...state, selection: { track: action.track, itemId: action.itemId } };
+        case 'PATCH_GRADE':
+          return { ...state, projectGrade: { ...state.projectGrade, ...action.patch, preset: action.preset || 'custom' } };
+        case 'APPLY_GRADE_PRESET': {
+          const p = GRADE_PRESETS[action.preset];
+          return { ...state, projectGrade: { ...p, preset: action.preset } };
+        }
+        case 'PATCH_COLOR_MATCH':
+          return { ...state, colorMatch: { ...state.colorMatch, ...action.patch } };
+        case 'PATCH_MUSIC':
+          return { ...state, music: { ...state.music, ...action.patch } };
+        default:
+          return state;
       }
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        background: #0a0d13;
-        color: #e8ecf5;
-        overflow: hidden;
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return defaultState();
+        const p = JSON.parse(raw);
+        const d = defaultState();
+        return {
+          ...d,
+          ...p,
+          assets: [], // blob urls die between sessions
+          savedMeta: p.savedMeta || [],
+          // tracks reference dead asset IDs, so reset — settings below still persist
+          tracks: { overlay: [], main: [], music: [] },
+          projectGrade: { ...d.projectGrade, ...(p.projectGrade || {}) },
+          colorMatch: { ...d.colorMatch, ...(p.colorMatch || {}), refAssetId: null, refPalette: null, queue: [] },
+          music: { ...d.music, ...(p.music || {}) },
+          selection: { track: null, itemId: null },
+          playhead: 0,
+          isPlaying: false,
+          currentPreviewAssetId: null,
+          showGrid: p.showGrid || false,
+        };
+      } catch { return defaultState(); }
+    }
+
+    function persistState(state) {
+      const savedMeta = state.assets.map(a => ({ name: a.name, kind: a.kind, sizeLabel: a.sizeLabel, isRef: a.isRef, isBrand: a.isBrand }));
+      const snap = {
+        projectName: state.projectName,
+        format: state.format,
+        targetLength: state.targetLength,
+        savedMeta,
+        tracks: state.tracks,
+        projectGrade: state.projectGrade,
+        colorMatch: { ...state.colorMatch, refPalette: null, queue: [] }, // don't persist palette or queue
+        music: state.music,
+        sessionNotes: state.sessionNotes,
+        zoom: state.zoom,
+        showGrid: state.showGrid,
+      };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(snap)); } catch (e) { console.warn('persist fail', e); }
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   HELPERS
+    // ──────────────────────────────────────────────────────────────
+    const round2 = (n) => Math.round(Number(n) * 100) / 100;
+    const round1 = (n) => Math.round(Number(n) * 10) / 10;
+    const newId = (prefix = 'id') => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+
+    const fmtTC = (sec) => {
+      sec = Math.max(0, Number(sec) || 0);
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      const cs = Math.floor((sec - Math.floor(sec)) * 100);
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`;
+    };
+
+    const fmtBytes = (b) => {
+      const u = ['B', 'KB', 'MB', 'GB']; let i = 0;
+      while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+      return `${b.toFixed(b >= 10 || i === 0 ? 0 : 1)} ${u[i]}`;
+    };
+
+    const getKind = (type, name) => {
+      if (type.startsWith('video')) return 'video';
+      if (type.startsWith('image')) return 'image';
+      if (type.startsWith('audio')) return 'audio';
+      const l = name.toLowerCase();
+      if (/\.(mp3|wav|m4a|aac|ogg|flac)$/.test(l)) return 'audio';
+      if (/\.(png|jpg|jpeg|webp|gif|avif)$/.test(l)) return 'image';
+      return 'video';
+    };
+
+    const getMainStarts = (items) => {
+      let acc = 0;
+      return items.map(c => { const s = acc; acc += Number(c.duration || 0); return s; });
+    };
+
+    const getReelLength = (state) => {
+      const mainLen = state.tracks.main.reduce((s, c) => s + Number(c.duration || 0), 0);
+      return Math.max(mainLen, 0.1);
+    };
+
+    const getActiveClipAt = (state, track, t) => {
+      const items = state.tracks[track];
+      if (track === 'main') {
+        const starts = getMainStarts(items);
+        for (let i = 0; i < items.length; i++) {
+          const start = starts[i];
+          const end = start + Number(items[i].duration || 0);
+          if (t >= start && t < end) return { clip: items[i], index: i, start, localT: t - start };
+        }
+        return null;
+      } else {
+        // overlay and music: absolute start from clip.start
+        for (let i = 0; i < items.length; i++) {
+          const c = items[i];
+          const start = Number(c.start || 0);
+          const end = start + Number(c.duration || 0);
+          if (t >= start && t < end) return { clip: c, index: i, start, localT: t - start };
+        }
+        return null;
       }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    };
+
+    // If playhead is within a transition window between two main clips, return
+    //   { outgoing, incoming, progress (0..1), type }
+    // Otherwise null. Transition is centered on the boundary.
+    const getActiveTransition = (state, t) => {
+      const items = state.tracks.main;
+      if (items.length < 2) return null;
+      const starts = getMainStarts(items);
+      for (let i = 1; i < items.length; i++) {
+        const tIn = items[i].transitionIn;
+        if (!tIn || tIn.type === 'cut' || !tIn.duration) continue;
+        const boundary = starts[i];
+        const half = tIn.duration / 2;
+        if (t >= boundary - half && t <= boundary + half) {
+          const progress = Math.max(0, Math.min(1, (t - (boundary - half)) / tIn.duration));
+          return {
+            outgoing: items[i - 1],
+            outgoingIndex: i - 1,
+            outgoingStart: starts[i - 1],
+            incoming: items[i],
+            incomingIndex: i,
+            incomingStart: starts[i],
+            progress,
+            type: tIn.type,
+            duration: tIn.duration,
+            boundary,
+          };
+        }
+      }
+      return null;
+    };
+
+    // css filter string from grade + toneMatch
+    // Tone match applies: saturation nudge + brightness nudge + warmth (sepia when warm).
+    // NO hue-rotate — that just spins the color wheel.
+    // Manual warmth (from grade.warmth, -1..1) also applies here: positive = sepia warm,
+    // negative = cool (simulated by reducing red via hue-rotate on the blue side, which is
+    // visually close enough for this scale).
+    const gradeToFilter = (g, matchDelta, strength) => {
+      let parts = [];
+      parts.push(`brightness(${g.brightness})`);
+      parts.push(`contrast(${g.contrast})`);
+      parts.push(`saturate(${g.saturate})`);
+
+      // manual warmth from the grade itself
+      const manualWarm = Number(g.warmth || 0);
+      if (manualWarm > 0.02) {
+        parts.push(`sepia(${(manualWarm * 0.5).toFixed(3)})`);
+      } else if (manualWarm < -0.02) {
+        // cool: a tiny hue-rotate gives us blue bias without the ugly full-wheel effect,
+        // because we're only doing ±15° max.
+        const deg = manualWarm * 15; // -15° max toward blue
+        parts.push(`hue-rotate(${deg.toFixed(1)}deg)`);
+      }
+
+      if (matchDelta && strength > 0) {
+        const s = Math.max(0, Math.min(1, strength));
+        const satMul = 1 + ((matchDelta.saturation / 0.3) - 1) * s * 0.5;
+        const brMul  = 1 + ((matchDelta.lightness  / 0.5) - 1) * s * 0.4;
+        const warmth = matchDelta.warmth;
+        const sepiaAmt = Math.max(0, warmth) * s * 0.4;
+        parts.push(`saturate(${Math.max(0, Math.min(3, satMul)).toFixed(3)})`);
+        parts.push(`brightness(${Math.max(0.3, Math.min(2, brMul)).toFixed(3)})`);
+        if (sepiaAmt > 0.02) parts.push(`sepia(${sepiaAmt.toFixed(3)})`);
+      }
+      return parts.join(' ');
+    };
+
+    // sample a reference image — weight pixels by saturation so dark backgrounds
+    // don't dominate the "average color" of a subject on black.
+    async function extractPalette(imgSrc) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const w = 64, h = 64;
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          const ctx = c.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const data = ctx.getImageData(0, 0, w, h).data;
+
+          // unweighted overall averages (for brightness/lightness feel)
+          let rs = 0, gs = 0, bs = 0, n = 0;
+          // saturation-weighted averages (for hue/warmth detection)
+          let rW = 0, gW = 0, bW = 0, wSum = 0;
+          const swatches = [];
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i], g = data[i + 1], b = data[i + 2];
+            rs += r; gs += g; bs += b; n++;
+            // pixel "colorfulness" = max-min (ignores pure black/gray/white)
+            const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+            const colorfulness = (mx - mn) / 255;
+            const pw = colorfulness * colorfulness; // emphasize colorful pixels
+            rW += r * pw; gW += g * pw; bW += b * pw; wSum += pw;
+            if (i % 48 === 0 && swatches.length < 16) swatches.push([r, g, b]);
+          }
+          const avgR = rs / n, avgG = gs / n, avgB = bs / n;
+          const satR = wSum > 0 ? rW / wSum : avgR;
+          const satG = wSum > 0 ? gW / wSum : avgG;
+          const satB = wSum > 0 ? bW / wSum : avgB;
+          const [hAvg, sAvg, lAvg] = rgbToHsl(avgR, avgG, avgB);
+          const [hSat, sSat, lSat] = rgbToHsl(satR, satG, satB);
+          resolve({
+            avgRgb: [avgR, avgG, avgB],
+            avgHsl: [hAvg, sAvg, lAvg],       // overall tonal feel
+            satRgb: [satR, satG, satB],       // color character of the subject
+            satHsl: [hSat, sSat, lSat],
+            swatches,
+          });
+        };
+        img.onerror = reject;
+        img.src = imgSrc;
+      });
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h = 0, s = 0, l = (max + min) / 2;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)); break;
+          case g: h = ((b - r) / d + 2); break;
+          case b: h = ((r - g) / d + 4); break;
+        }
+        h *= 60;
+      }
+      return [h, s, l];
+    }
+
+    // Derive tonal adjustments to nudge toward — NO hue shifting.
+    // Uses saturation-weighted color for warmth (subject character),
+    // unweighted averages for brightness/saturation feel.
+    function computeMatchDelta(palette) {
+      if (!palette) return null;
+      const [satR, satG, satB] = palette.satRgb || palette.avgRgb;
+      const [, sAvg, lAvg] = palette.avgHsl;
+      // warmth in -1..1: positive = warm (reds/oranges), negative = cool (blues)
+      const warmth = (satR - satB) / 255;
+      return {
+        warmth,
+        saturation: palette.satHsl ? palette.satHsl[1] : sAvg,
+        lightness: lAvg,
+      };
+    }
+
+    // Copy the effective grade (and color-match snapshot) from the first still-beat main clip
+    // onto the target clip. Returns { ok: bool, message: string }.
+    function matchStyleToStills(state, targetTrack, targetId) {
+      const stills = state.tracks.main.filter(c => c.kind === 'image');
+      if (!stills.length) return { ok: false, message: 'No still beats on main track to match' };
+      const source = stills[0];
+      const effectiveGrade = source.grade
+        ? { ...source.grade }
+        : { ...state.projectGrade };
+      // also snapshot the color-match state so if the project changes, this clip stays locked
+      const matchSnapshot = state.colorMatch.refAssetId
+        ? { refAssetId: state.colorMatch.refAssetId, strength: state.colorMatch.strength }
+        : null;
+      return {
+        ok: true,
+        patch: { grade: effectiveGrade, matchSnapshot },
+        sourceLabel: source.label,
+      };
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   CLIP DEFAULTS
+    // ──────────────────────────────────────────────────────────────
+    function defaultClip(track, asset, targetLength, reelLength) {
+      const base = {
+        id: newId('clip'),
+        assetId: asset.id,
+        label: asset.name,
+        kind: asset.kind,
+        trimStart: 0,
+        speed: 1,
+        scale: 1,
+        offset: { x: 0, y: 0 },
+        muted: track !== 'main',
+        note: '',
+        aiFlags: { removeBg: false, reframe: false, enhance: false, exposure: false },
+        // per-clip grade override (null = use project grade)
+        grade: null,
+      };
+      if (track === 'main') {
+        let duration;
+        if (asset.kind === 'image') duration = 2;
+        else if (asset.duration && asset.duration > 0) duration = round2(asset.duration);
+        else duration = 3; // video/audio fallback if probe hasn't finished
+        return { ...base, duration, role: inferRole(asset), transitionIn: { type: 'cut', duration: 0 } };
+      }
+      if (track === 'overlay') {
+        return { ...base, duration: reelLength, start: 0, autoFit: true, role: asset.isBrand ? 'brand' : 'overlay', position: { x: 0.03, y: 0.03, width: 0.2 } };
+      }
+      // music
+      const musicDur = (asset.duration && asset.duration > 0) ? round2(asset.duration) : reelLength;
+      return { ...base, duration: musicDur, start: 0, role: 'music' };
+    }
+
+    function inferRole(asset) {
+      if (asset.kind === 'image') return 'still beat';
+      return 'motion beat';
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //   WebGL PIPELINE
+    // ─────────────────────────────────────────────────────────────
+    // Vertex shader — a full-screen quad, passes UV to fragment shader.
+    const GL_VERT = `
+      attribute vec2 a_pos;
+      attribute vec2 a_uv;
+      varying vec2 v_uv;
+      void main() {
+        v_uv = a_uv;
+        gl_Position = vec4(a_pos, 0.0, 1.0);
+      }
+    `;
+
+    // Fragment shader. All grade + auto + match math happens per-pixel here.
+    // Uniforms:
+    //   u_tex: source frame
+    //   u_brightness, u_contrast, u_saturate, u_blacks, u_warmth: grade
+    //   u_auto_intensity: 0..1 auto adjust strength
+    //   u_auto_black, u_auto_white: black/white points (0..1 each)
+    //   u_auto_gain: per-channel gain vec3 for gray-world correction
+    //   u_match_intensity: 0..1
+    //   u_match_lut: 256x1 RGB lookup texture, per-channel remap (0..255 -> 0..255 / 255)
+    //   u_use_match_lut: 1.0 if match is active, 0.0 otherwise
+    const GL_FRAG = `
+      precision highp float;
+      varying vec2 v_uv;
+      uniform sampler2D u_tex;
+      uniform float u_brightness;
+      uniform float u_contrast;
+      uniform float u_saturate;
+      uniform float u_blacks;
+      uniform float u_warmth;
+      uniform float u_auto_intensity;
+      uniform float u_auto_black;
+      uniform float u_auto_white;
+      uniform vec3  u_auto_gain;
+      uniform float u_match_intensity;
+      uniform sampler2D u_match_lut;
+      uniform float u_use_match_lut;
+
+      vec3 saturation(vec3 c, float amount) {
+        float gray = dot(c, vec3(0.299, 0.587, 0.114));
+        return mix(vec3(gray), c, amount);
+      }
+
+      void main() {
+        vec4 tex = texture2D(u_tex, v_uv);
+        vec3 col = tex.rgb;
+
+        // ── auto adjust (blended by u_auto_intensity) ──
+        if (u_auto_intensity > 0.001) {
+          vec3 adj = col;
+          // stretch black/white points
+          float bp = u_auto_black;
+          float wp = max(u_auto_white, bp + 0.01);
+          adj = clamp((adj - bp) / (wp - bp), 0.0, 1.0);
+          // gray-world gain neutralization
+          adj = adj * u_auto_gain;
+          // gentle mid-tone lift
+          adj = pow(adj, vec3(0.95));
+          col = mix(col, adj, u_auto_intensity);
+        }
+
+        // ── reference match via 1D LUT per channel ──
+        if (u_use_match_lut > 0.5 && u_match_intensity > 0.001) {
+          // sample the LUT at the current channel value for each of r/g/b
+          float rMap = texture2D(u_match_lut, vec2(col.r, 0.5)).r;
+          float gMap = texture2D(u_match_lut, vec2(col.g, 0.5)).g;
+          float bMap = texture2D(u_match_lut, vec2(col.b, 0.5)).b;
+          vec3 matched = vec3(rMap, gMap, bMap);
+          col = mix(col, matched, u_match_intensity);
+        }
+
+        // ── grade: brightness ──
+        col *= u_brightness;
+
+        // ── grade: contrast around 0.5 pivot ──
+        col = (col - 0.5) * u_contrast + 0.5;
+
+        // ── grade: saturation ──
+        col = saturation(col, u_saturate);
+
+        // ── grade: blacks lift/crush ──
+        // positive u_blacks lifts blacks, negative crushes
+        col = col + u_blacks * (1.0 - smoothstep(0.0, 0.3, col));
+
+        // ── grade: warmth ──
+        // positive = warm (R up, B down), negative = cool (R down, B up)
+        float w = u_warmth;
+        col.r += w * 0.06;
+        col.b -= w * 0.06;
+        col = clamp(col, 0.0, 1.0);
+
+        gl_FragColor = vec4(col, tex.a);
+      }
+    `;
+
+    function compileShader(gl, type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        const log = gl.getShaderInfoLog(s);
+        gl.deleteShader(s);
+        throw new Error('Shader compile failed: ' + log);
+      }
+      return s;
+    }
+
+    function createGLProgram(gl) {
+      const vs = compileShader(gl, gl.VERTEX_SHADER, GL_VERT);
+      const fs = compileShader(gl, gl.FRAGMENT_SHADER, GL_FRAG);
+      const prog = gl.createProgram();
+      gl.attachShader(prog, vs);
+      gl.attachShader(prog, fs);
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        throw new Error('Program link failed: ' + gl.getProgramInfoLog(prog));
+      }
+      // full-screen quad (triangle strip): x, y, u, v
+      const quad = new Float32Array([
+        -1, -1, 0, 1,   // BL
+         1, -1, 1, 1,   // BR
+        -1,  1, 0, 0,   // TL
+         1,  1, 1, 0,   // TR
+      ]);
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+
+      const aPos = gl.getAttribLocation(prog, 'a_pos');
+      const aUv  = gl.getAttribLocation(prog, 'a_uv');
+      gl.enableVertexAttribArray(aPos);
+      gl.enableVertexAttribArray(aUv);
+      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 16, 0);
+      gl.vertexAttribPointer(aUv,  2, gl.FLOAT, false, 16, 8);
+
+      // source texture
+      const srcTex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, srcTex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+      // match LUT texture (256x1 RGBA, slot 1)
+      const lutTex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, lutTex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      // initialize with identity LUT
+      const identity = new Uint8Array(256 * 4);
+      for (let i = 0; i < 256; i++) {
+        identity[i * 4 + 0] = i;
+        identity[i * 4 + 1] = i;
+        identity[i * 4 + 2] = i;
+        identity[i * 4 + 3] = 255;
+      }
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, identity);
+
+      return { prog, srcTex, lutTex };
+    }
+
+    // Upload a 256x1 RGBA LUT from a pre-built Uint8Array
+    function uploadMatchLUT(gl, lutTex, lut /* Uint8Array len=1024 */) {
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, lutTex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, lut);
+    }
+
+    // Draw one frame: upload source (video/image) to srcTex, set uniforms, draw.
+    function drawGLFrame(gl, handles, source, params) {
+      const { prog, srcTex, lutTex } = handles;
+      gl.useProgram(prog);
+
+      // upload source
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, srcTex);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      try {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+      } catch (e) {
+        // may throw if video not ready — skip draw this frame
+        return;
+      }
+      gl.uniform1i(gl.getUniformLocation(prog, 'u_tex'), 0);
+
+      // match LUT on unit 1
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, lutTex);
+      gl.uniform1i(gl.getUniformLocation(prog, 'u_match_lut'), 1);
+
+      // grade uniforms
+      gl.uniform1f(gl.getUniformLocation(prog, 'u_brightness'), params.brightness);
+      gl.uniform1f(gl.getUniformLocation(prog, 'u_contrast'),   params.contrast);
+      gl.uniform1f(gl.getUniformLocation(prog, 'u_saturate'),   params.saturate);
+      gl.uniform1f(gl.getUniformLocation(prog, 'u_blacks'),     params.blacks);
+      gl.uniform1f(gl.getUniformLocation(prog, 'u_warmth'),     params.warmth || 0);
+
+      gl.uniform1f(gl.getUniformLocation(prog, 'u_auto_intensity'), params.autoIntensity || 0);
+      gl.uniform1f(gl.getUniformLocation(prog, 'u_auto_black'),     params.autoBlack || 0);
+      gl.uniform1f(gl.getUniformLocation(prog, 'u_auto_white'),     params.autoWhite || 1);
+      gl.uniform3f(gl.getUniformLocation(prog, 'u_auto_gain'),
+        (params.autoGain && params.autoGain[0]) || 1,
+        (params.autoGain && params.autoGain[1]) || 1,
+        (params.autoGain && params.autoGain[2]) || 1);
+
+      gl.uniform1f(gl.getUniformLocation(prog, 'u_match_intensity'), params.matchIntensity || 0);
+      gl.uniform1f(gl.getUniformLocation(prog, 'u_use_match_lut'),   params.useMatchLut ? 1 : 0);
+
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    // Returns CSS styles for the outgoing and incoming layers during a transition.
+    // p is progress 0..1. type is one of TRANSITIONS keys.
+    function transitionStyles(type, p) {
+      // p=0: outgoing fully visible, incoming not started
+      // p=1: outgoing gone, incoming fully visible
+      const out = {}; const inc = {};
+      switch (type) {
+        case 'dissolve':
+          out.opacity = 1 - p;
+          inc.opacity = p;
+          break;
+        case 'fadeBlack': {
+          // fade to black at midpoint
+          const half = p < 0.5 ? p * 2 : (1 - p) * 2; // 0..1..0
+          const visible = p < 0.5 ? 'out' : 'in';
+          out.opacity = visible === 'out' ? (1 - p * 2) : 0;
+          inc.opacity = visible === 'in' ? ((p - 0.5) * 2) : 0;
+          break;
+        }
+        case 'fadeWhite': {
+          // overlay a white wash peaking at midpoint, with a crossfade underneath
+          out.opacity = 1 - p;
+          inc.opacity = p;
+          // we'll also render a white overlay as a separate element — handled in JSX
+          break;
+        }
+        case 'wipeLeft': {
+          // incoming revealed from the right, covering outgoing
+          out.opacity = 1;
+          inc.opacity = 1;
+          inc.clipPath = `inset(0 0 0 ${(1 - p) * 100}%)`;
+          break;
+        }
+        case 'wipeRight': {
+          out.opacity = 1;
+          inc.opacity = 1;
+          inc.clipPath = `inset(0 ${(1 - p) * 100}% 0 0)`;
+          break;
+        }
+        case 'whipBlur': {
+          // blur + slight translate to simulate whip pan
+          const blurAmt = Math.sin(p * Math.PI) * 20; // peak at midpoint
+          out.opacity = 1 - p;
+          inc.opacity = p;
+          out.filter = `blur(${blurAmt}px)`;
+          inc.filter = `blur(${blurAmt}px)`;
+          out.transform = `translateX(${-p * 40}%)`;
+          inc.transform = `translateX(${(1 - p) * 40}%)`;
+          break;
+        }
+        default:
+          out.opacity = 1;
+          inc.opacity = 0;
+      }
+      return { out, inc };
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   APP
+    // ──────────────────────────────────────────────────────────────
+    function App() {
+      const [state, dispatch] = useReducer(reducer, null, loadState);
+      const [activeTab, setActiveTab] = useState('match');
+      const [leftCollapsed, setLeftCollapsed] = useState(false);
+      const [rightCollapsed, setRightCollapsed] = useState(false);
+      const [exportMenuOpen, setExportMenuOpen] = useState(false);
+      const [modal, setModal] = useState(null); // { type: 'mp4'|'spec'|'error', ... }
+      const [toasts, setToasts] = useState([]);
+      const [cheatOpen, setCheatOpen] = useState(false);
+
+      const pushToast = useCallback((message, kind = 'good', ttl = 2500) => {
+        const id = newId('t');
+        setToasts(prev => [...prev, { id, message, kind }]);
+        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), ttl);
+      }, []);
+
+      // persist state
+      useEffect(() => { persistState(state); }, [state]);
+
+      // color match palette extraction
+      useEffect(() => {
+        const refAsset = state.assets.find(a => a.id === state.colorMatch.refAssetId);
+        if (!refAsset || refAsset.kind !== 'image') {
+          if (state.colorMatch.refPalette) dispatch({ type: 'PATCH_COLOR_MATCH', patch: { refPalette: null } });
+          return;
+        }
+        extractPalette(refAsset.url)
+          .then(pal => dispatch({ type: 'PATCH_COLOR_MATCH', patch: { refPalette: pal } }))
+          .catch(e => console.warn('palette extract fail', e));
+      }, [state.colorMatch.refAssetId, state.assets]);
+
+      // playback loop — use refs so we don't recreate the effect every frame
+      const rafRef = useRef(null);
+      const lastTickRef = useRef(null);
+      const stateRef = useRef(state);
+      useEffect(() => { stateRef.current = state; }, [state]);
+
+      useEffect(() => {
+        if (!state.isPlaying) {
+          if (rafRef.current) cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+          lastTickRef.current = null;
+          return;
+        }
+        const tick = (ts) => {
+          if (lastTickRef.current == null) lastTickRef.current = ts;
+          const dt = (ts - lastTickRef.current) / 1000;
+          lastTickRef.current = ts;
+          const s = stateRef.current;
+          const reelLen = getReelLength(s);
+          const nextT = s.playhead + dt;
+          if (nextT >= reelLen) {
+            dispatch({ type: 'SET_PLAYHEAD', t: reelLen });
+            dispatch({ type: 'SET_PLAYING', playing: false });
+            return;
+          }
+          dispatch({ type: 'SET_PLAYHEAD', t: nextT });
+          rafRef.current = requestAnimationFrame(tick);
+        };
+        rafRef.current = requestAnimationFrame(tick);
+        return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+      }, [state.isPlaying]);
+
+      // keyboard shortcuts
+      useEffect(() => {
+        const onKey = (e) => {
+          const tag = document.activeElement?.tagName;
+          if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
+          if (e.code === 'Space') {
+            e.preventDefault();
+            const reelLen = getReelLength(state);
+            if (!state.isPlaying && state.playhead >= reelLen - 0.05 && reelLen > 0.1) {
+              // at the end — rewind to start (stay paused, user hits Space again to play)
+              dispatch({ type: 'SET_PLAYHEAD', t: 0 });
+            } else {
+              dispatch({ type: 'SET_PLAYING', playing: !state.isPlaying });
+            }
+          }
+          if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (state.selection.itemId) {
+              dispatch({ type: 'REMOVE_CLIP', track: state.selection.track, id: state.selection.itemId });
+              e.preventDefault();
+            }
+          }
+          if (e.key === 's' || e.key === 'S') {
+            // split main clip at playhead
+            if (state.selection.track === 'main' && state.selection.itemId) {
+              dispatch({ type: 'SPLIT_CLIP', id: state.selection.itemId });
+            } else {
+              // fallback: split whatever main clip is under the playhead
+              const active = getActiveClipAt(state, 'main', state.playhead);
+              if (active) dispatch({ type: 'SPLIT_CLIP', id: active.clip.id });
+            }
+            e.preventDefault();
+          }
+          if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
+            setCheatOpen(true);
+            e.preventDefault();
+          }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      }, [state.isPlaying, state.selection, state.playhead, state.tracks.main]);
+
+      // overlay auto-fit: any overlay with autoFit !== false follows the main track length
+      useEffect(() => {
+        const reelLen = getReelLength(state);
+        state.tracks.overlay.forEach((c) => {
+          if (c.autoFit !== false && Math.abs((c.duration || 0) - reelLen) > 0.05) {
+            dispatch({ type: 'UPDATE_CLIP', track: 'overlay', id: c.id, patch: { duration: reelLen } });
+          }
+        });
+        // eslint-disable-next-line
+      }, [state.tracks.main, state.tracks.overlay.length]);
+
+      // ───── media upload
+      const addFiles = useCallback((files) => {
+        const fileArr = Array.from(files || []);
+        if (!fileArr.length) return;
+        const assets = fileArr.map(f => ({
+          id: newId('asset'),
+          name: f.name,
+          kind: getKind(f.type, f.name),
+          sizeLabel: fmtBytes(f.size),
+          url: URL.createObjectURL(f),
+          isRef: false,
+          isBrand: false,
+          duration: null, // filled in asynchronously for video/audio
+        }));
+        dispatch({ type: 'ADD_ASSETS', assets });
+        pushToast(`Loaded ${assets.length} ${assets.length === 1 ? 'file' : 'files'}`, 'good');
+
+        // Probe duration for video/audio assets. We load them in a detached element and
+        // read metadata. This updates the asset record so that any clip dropped onto the
+        // timeline afterward gets the real duration.
+        assets.forEach((asset) => {
+          if (asset.kind !== 'video' && asset.kind !== 'audio') return;
+          const el = document.createElement(asset.kind);
+          el.preload = 'metadata';
+          el.muted = true;
+          const done = (duration) => {
+            if (!duration || !isFinite(duration)) return;
+            dispatch({ type: 'UPDATE_ASSET', id: asset.id, patch: { duration: round2(duration) } });
+          };
+          el.onloadedmetadata = () => {
+            done(el.duration);
+            if (asset.kind === 'video' && el.videoWidth === 0) {
+              // Browser cannot decode this codec (likely HEVC/H.265) — auto-convert
+              el.src = '';
+              dispatch({ type: 'UPDATE_ASSET', id: asset.id, patch: { converting: true } });
+              convertToH264(asset, dispatch, pushToast);
+            } else {
+              el.src = '';
+            }
+          };
+          el.onerror = () => { /* leave duration null, default clip will use 3s fallback */ };
+          el.src = asset.url;
+        });
+      }, [pushToast]);
+
+      // ───── export handlers
+      const reelLen = useMemo(() => getReelLength(state), [state.tracks.main]);
+      const canExportMp4 = reelLen <= 30;
+
+      const handleExport = async (kind) => {
+        setExportMenuOpen(false);
+        if (kind === 'brief-copy') {
+          try {
+            await navigator.clipboard.writeText(generateBrief(state));
+            pushToast('Brief copied to clipboard — paste into GPT', 'good');
+          } catch (err) {
+            pushToast('Clipboard copy failed — use the Brief tab instead', 'bad', 3500);
+          }
+          return;
+        }
+        if (kind === 'spec') {
+          exportSpec(state, pushToast);
+          return;
+        }
+        if (kind === 'mp4') {
+          if (!canExportMp4) {
+            pushToast('MP4 export is for ≤30s reels. Use spec for longer.', 'warn', 3500);
+            return;
+          }
+          // Detect file:// and bail with a clear error before trying
+          if (window.location.protocol === 'file:') {
+            setModal({
+              type: 'mp4-error',
+              message: 'Opened via file:// — ffmpeg.wasm needs http://.\n\nFix: open a terminal in the folder containing this file and run:\n\n  python3 -m http.server 8000\n\nThen open http://localhost:8000/reel-lab-v7.html in your browser.',
+            });
+            return;
+          }
+          setModal({ type: 'mp4', progress: 0, log: ['Loading ffmpeg.wasm (this may take a minute on first run)…'] });
+          try {
+            await runMp4Export(state, (progress, line) => {
+              setModal(m => ({ ...m, progress: Math.max(m?.progress || 0, progress), log: line ? [...(m?.log || []), line] : (m?.log || []) }));
+            });
+            setModal(m => ({ ...m, done: true }));
+            pushToast('MP4 export complete', 'good');
+          } catch (err) {
+            console.error(err);
+            setModal({ type: 'mp4-error', message: err.message || String(err) });
+            pushToast('MP4 export failed — see details', 'bad', 4000);
+          }
+        }
+      };
+
+      // ───── BG removal
+      const [bgBusy, setBgBusy] = useState(false);
+      const removeBgOnSelection = async () => {
+        const sel = state.selection;
+        if (!sel.itemId || sel.track !== 'main') { pushToast('Select an image clip first', 'warn'); return; }
+        const clip = state.tracks.main.find(c => c.id === sel.itemId);
+        if (!clip || clip.kind !== 'image') { pushToast('BG removal works on image clips only', 'warn'); return; }
+        const asset = state.assets.find(a => a.id === clip.assetId);
+        if (!asset) return;
+        setBgBusy(true);
+        pushToast('Loading BG removal model (first run ~5MB)…', 'good', 3500);
+        try {
+          const mod = await import('@imgly/background-removal');
+          const removeBackground = mod.removeBackground || mod.default?.removeBackground;
+          if (!removeBackground) throw new Error('BG removal module missing expected export');
+          const blob = await removeBackground(asset.url);
+          const url = URL.createObjectURL(blob);
+          const newAsset = { id: newId('asset'), name: `${asset.name}.bg-removed.png`, kind: 'image', sizeLabel: fmtBytes(blob.size), url, isRef: false, isBrand: false };
+          dispatch({ type: 'ADD_ASSETS', assets: [newAsset] });
+          dispatch({ type: 'UPDATE_CLIP', track: 'main', id: clip.id, patch: { assetId: newAsset.id, label: newAsset.name } });
+          pushToast('Background removed', 'good');
+        } catch (err) {
+          console.error(err);
+          pushToast(`BG removal failed: ${err.message}`, 'bad', 4000);
+        } finally {
+          setBgBusy(false);
+        }
+      };
+
+      return (
+        <>
+          <TopBar
+            state={state}
+            dispatch={dispatch}
+            reelLen={reelLen}
+            onToggleLeft={() => setLeftCollapsed(c => !c)}
+            onToggleRight={() => setRightCollapsed(c => !c)}
+            exportOpen={exportMenuOpen}
+            setExportOpen={setExportMenuOpen}
+            onExport={handleExport}
+            canExportMp4={canExportMp4}
+            openCheat={() => setCheatOpen(true)}
+          />
+          <div className="workspace">
+            <LeftRail
+              state={state}
+              dispatch={dispatch}
+              addFiles={addFiles}
+              collapsed={leftCollapsed}
+            />
+            <Center
+              state={state}
+              dispatch={dispatch}
+              reelLen={reelLen}
+              pushToast={pushToast}
+            />
+            <RightDrawer
+              state={state}
+              dispatch={dispatch}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              collapsed={rightCollapsed}
+              pushToast={pushToast}
+            />
+          </div>
+          <ContextualToolbar
+            state={state}
+            dispatch={dispatch}
+            onRemoveBg={removeBgOnSelection}
+            bgBusy={bgBusy}
+            pushToast={pushToast}
+          />
+          {modal && <ExportModal modal={modal} close={() => setModal(null)} />}
+          {cheatOpen && <CheatSheet close={() => setCheatOpen(false)} />}
+          <ToastStack toasts={toasts} />
+        </>
+      );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   TOP BAR
+    // ──────────────────────────────────────────────────────────────
+    function TopBar({ state, dispatch, reelLen, onToggleLeft, onToggleRight, exportOpen, setExportOpen, onExport, canExportMp4, openCheat }) {
+      const menuRef = useRef(null);
+      useEffect(() => {
+        if (!exportOpen) return;
+        const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setExportOpen(false); };
+        document.addEventListener('mousedown', onDoc);
+        return () => document.removeEventListener('mousedown', onDoc);
+      }, [exportOpen, setExportOpen]);
+
+      return (
+        <header className="topbar">
+          <button className="btn ghost icon" onClick={onToggleLeft} title="Toggle left rail">⟨</button>
+          <div className="brand">Reel Lab</div>
+          <div className="divider" />
+          <input
+            className="project-name"
+            value={state.projectName}
+            onChange={(e) => dispatch({ type: 'PATCH', patch: { projectName: e.target.value } })}
+            placeholder="Project name"
+          />
+          <div className="divider" />
+          <select
+            className="inp"
+            style={{ width: 140 }}
+            value={state.format}
+            onChange={(e) => dispatch({ type: 'PATCH', patch: { format: e.target.value } })}
+          >
+            {Object.entries(FORMATS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+          <div className="inline-field">
+            <span className="label">target</span>
+            <input
+              type="number"
+              min="1" max="600" step="1"
+              value={state.targetLength}
+              onChange={(e) => dispatch({ type: 'PATCH', patch: { targetLength: Number(e.target.value) || 0 } })}
+            />
+            <span className="label">s</span>
+          </div>
+          <span className={`chip ${Math.abs(reelLen - state.targetLength) < 0.1 ? 'live' : ''}`}>
+            {round1(reelLen)}s / {round1(state.targetLength)}s
+          </span>
+          <div style={{ flex: 1 }} />
+          <div className="menu-wrap" ref={menuRef}>
+            <button className="btn primary" onClick={() => setExportOpen(o => !o)}>Export ▾</button>
+            {exportOpen && (
+              <div className="menu">
+                <div className="menu-item" onClick={() => onExport('mp4')} style={{ opacity: canExportMp4 ? 1 : 0.4 }}>
+                  <div style={{ flex: 1 }}>
+                    <div className="menu-title">Render MP4 {!canExportMp4 && '(≤30s only)'}</div>
+                    <div className="menu-desc">In-browser via ffmpeg.wasm. Requires serving via http://, not file://.</div>
+                  </div>
+                </div>
+                <div className="menu-item" onClick={() => onExport('spec')}>
+                  <div style={{ flex: 1 }}>
+                    <div className="menu-title">Export recipe (JSON + FFmpeg)</div>
+                    <div className="menu-desc">Specification you run externally. Works for any length.</div>
+                  </div>
+                </div>
+                <div className="menu-item" onClick={() => onExport('brief-copy')}>
+                  <div style={{ flex: 1 }}>
+                    <div className="menu-title">Copy brief to clipboard</div>
+                    <div className="menu-desc">Fast GPT handoff. Just paste into your chat.</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <button className="btn ghost icon" onClick={openCheat} title="Keyboard shortcuts (press ? anytime)">?</button>
+          <button className="btn ghost icon" onClick={onToggleRight} title="Toggle right drawer">⟩</button>
+        </header>
+      );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   LEFT RAIL
+    // ──────────────────────────────────────────────────────────────
+    function LeftRail({ state, dispatch, addFiles, collapsed }) {
+      const [brandOpen, setBrandOpen] = useState(true);
+      const [ctxMenu, setCtxMenu] = useState(null); // {x, y, assetId}
+      const refs = state.assets.filter(a => a.isRef);
+      const brand = state.assets.find(a => a.isBrand);
+      const regular = state.assets;
+
+      // close ctx menu on outside click
+      useEffect(() => {
+        if (!ctxMenu) return;
+        const close = () => setCtxMenu(null);
+        document.addEventListener('mousedown', close);
+        document.addEventListener('scroll', close, true);
+        window.addEventListener('resize', close);
+        return () => {
+          document.removeEventListener('mousedown', close);
+          document.removeEventListener('scroll', close, true);
+          window.removeEventListener('resize', close);
+        };
+      }, [ctxMenu]);
+
+      const onAssetDragStart = (e, asset) => {
+        e.dataTransfer.setData('text/asset-id', asset.id);
+        e.dataTransfer.effectAllowed = 'copy';
+      };
+
+      const openCtxMenu = (e, asset) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // clamp so menu stays on screen
+        const maxX = window.innerWidth - 200;
+        const maxY = window.innerHeight - 220;
+        setCtxMenu({ x: Math.min(e.clientX, maxX), y: Math.min(e.clientY, maxY), assetId: asset.id });
+      };
+
+      const ctxAsset = ctxMenu ? state.assets.find(a => a.id === ctxMenu.assetId) : null;
+
+      return (
+        <aside className={`rail ${collapsed ? 'collapsed' : ''}`}>
+          <div className="rail-head">
+            <span>Library</span>
+            <label className="btn tiny" htmlFor="mediaInput" style={{ cursor: 'pointer' }}>+ Add</label>
+            <input id="mediaInput" type="file" multiple accept="video/*,image/*,audio/*"
+              onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }}
+            />
+          </div>
+          <div className="rail-body">
+            <div className="shelf">
+              <div className="shelf-head">
+                <span className="sec-label">Media ({regular.length})</span>
+              </div>
+              <div className="asset-grid">
+                {regular.length === 0 && (
+                  <div className="asset-empty">Drag files here, or click + Add.</div>
+                )}
+                {regular.map(asset => (
+                  <div
+                    key={asset.id}
+                    className={`asset ${state.currentPreviewAssetId === asset.id ? 'selected' : ''}`}
+                    draggable
+                    onDragStart={(e) => onAssetDragStart(e, asset)}
+                    onClick={() => dispatch({ type: 'SET_PREVIEW', id: asset.id })}
+                    onContextMenu={(e) => openCtxMenu(e, asset)}
+                    onDoubleClick={() => {
+                      const reel = getReelLength(state);
+                      const track = asset.kind === 'audio' ? 'music' : 'main';
+                      const clip = defaultClip(track, asset, state.targetLength, reel);
+                      dispatch({ type: 'ADD_CLIP', track, clip });
+                    }}
+                    title={`${asset.name}\n${asset.sizeLabel}\ndbl-click to add · right-click for options`}
+                  >
+                    <AssetThumb asset={asset} />
+                    <span className="kind">
+                      {asset.kind}
+                      {asset.duration ? ` · ${fmtTC(asset.duration)}` : ''}
+                    </span>
+                    {asset.isRef && <span className="ref-flag">ref</span>}
+                    {asset.converting && <span className="converting-badge" title="Converting to H.264…">⟳</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="shelf">
+              <div className="shelf-head">
+                <span className="sec-label">Color refs ({refs.length})</span>
+                <span className="micro" style={{ fontSize: 10 }}>click to activate</span>
+              </div>
+              {refs.length > 0 ? (
+                <div className="ref-strip">
+                  {refs.map(a => (
+                    <div
+                      key={a.id}
+                      className={`ref-chip ${state.colorMatch.refAssetId === a.id ? 'active' : ''}`}
+                      onClick={() => dispatch({ type: 'PATCH_COLOR_MATCH', patch: { refAssetId: state.colorMatch.refAssetId === a.id ? null : a.id } })}
+                      title={a.name}
+                    >
+                      <img src={a.url} alt="" />
+                      <div className="rm" onClick={(e) => { e.stopPropagation(); dispatch({ type: 'TOGGLE_REF', id: a.id }); }}>×</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="micro" style={{ lineHeight: 1.5 }}>
+                  Right-click an image → Pin as color ref.
+                </div>
+              )}
+            </div>
+
+            <div className="shelf">
+              <div className="shelf-head">
+                <span className="sec-label">Brand</span>
+                <button className="btn tiny ghost" onClick={() => setBrandOpen(o => !o)}>{brandOpen ? '−' : '+'}</button>
+              </div>
+              {brandOpen && (
+                brand ? (
+                  <div className="brand-box">
+                    <img src={brand.url} alt="" />
+                    <div className="name">{brand.name}</div>
+                    <button
+                      className="btn tiny ghost"
+                      title="Add logo overlay to timeline"
+                      onClick={() => {
+                        const reel = getReelLength(state);
+                        const clip = defaultClip('overlay', brand, state.targetLength, reel);
+                        dispatch({ type: 'ADD_CLIP', track: 'overlay', clip });
+                      }}
+                    >Place</button>
+                  </div>
+                ) : (
+                  <div className="micro" style={{ lineHeight: 1.5 }}>
+                    Right-click an image → Set as brand.
+                  </div>
+                )
+              )}
+            </div>
+          </div>
+
+          {ctxMenu && ctxAsset && (
+            <div
+              className="menu"
+              style={{ position: 'fixed', top: ctxMenu.y, left: ctxMenu.x, right: 'auto' }}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <div className="menu-item" onClick={() => { dispatch({ type: 'SET_PREVIEW', id: ctxAsset.id }); setCtxMenu(null); }}>
+                <div className="menu-title">Preview</div>
+              </div>
+              <div className="menu-item" onClick={() => {
+                const reel = getReelLength(state);
+                const track = ctxAsset.kind === 'audio' ? 'music' : 'main';
+                dispatch({ type: 'ADD_CLIP', track, clip: defaultClip(track, ctxAsset, state.targetLength, reel) });
+                setCtxMenu(null);
+              }}>
+                <div className="menu-title">Add to timeline</div>
+                <div className="menu-desc" style={{ marginLeft: 'auto', alignSelf: 'center' }}></div>
+              </div>
+              {ctxAsset.kind === 'image' && (
+                <>
+                  <div className="menu-divider" />
+                  <div className="menu-item" onClick={() => { dispatch({ type: 'TOGGLE_REF', id: ctxAsset.id }); setCtxMenu(null); }}>
+                    <div className="menu-title">{ctxAsset.isRef ? 'Unpin color ref' : 'Pin as color ref'}</div>
+                  </div>
+                  <div className="menu-item" onClick={() => { dispatch({ type: 'SET_BRAND_ASSET', id: ctxAsset.id }); setCtxMenu(null); }}>
+                    <div className="menu-title">{ctxAsset.isBrand ? 'Unset as brand' : 'Set as brand'}</div>
+                  </div>
+                </>
+              )}
+              <div className="menu-divider" />
+              <div className="menu-item" onClick={() => { dispatch({ type: 'REMOVE_ASSET', id: ctxAsset.id }); setCtxMenu(null); }}>
+                <div className="menu-title" style={{ color: 'var(--bad)' }}>Remove from library</div>
+                <div className="menu-desc">Also removes any clips using it.</div>
+              </div>
+            </div>
+          )}
+        </aside>
+      );
+    }
+
+    function AssetThumb({ asset }) {
+      if (asset.kind === 'image') return <img src={asset.url} alt="" />;
+      if (asset.kind === 'video') return <video src={asset.url} muted preload="metadata" />;
+      return <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1d2740, #2a3552)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff8', fontSize: 10 }}>♪</div>;
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   CENTER (preview + transport + timeline)
+    // ──────────────────────────────────────────────────────────────
+    function Center({ state, dispatch, reelLen, pushToast }) {
+      return (
+        <div className="stage-wrap">
+          <PreviewStage state={state} dispatch={dispatch} reelLen={reelLen} />
+          <Transport state={state} dispatch={dispatch} reelLen={reelLen} />
+          <Timeline state={state} dispatch={dispatch} reelLen={reelLen} pushToast={pushToast} />
+        </div>
+      );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   PREVIEW STAGE
+    // ──────────────────────────────────────────────────────────────
+    function PreviewStage({ state, dispatch, reelLen }) {
+      const stageRef = useRef(null);
+      const videoRef = useRef(null);
+      const audioRef = useRef(null);
+      const imgRef = useRef(null);
+      const glCanvasRef = useRef(null);
+      const glCtxRef = useRef(null);       // { gl, handles }
+      const glRafRef = useRef(null);
+      const [canvasDims, setCanvasDims] = useState({ w: 0, h: 0 });
+
+      // compute the canvas size — fit the stage while preserving the chosen format's aspect ratio
+      useLayoutEffect(() => {
+        const el = stageRef.current;
+        if (!el) return;
+        const fmt = FORMATS[state.format] || FORMATS['9:16'];
+        const ratio = fmt.w / fmt.h;
+        const compute = () => {
+          const rect = el.getBoundingClientRect();
+          const availW = Math.max(0, rect.width - 40);   // 20px padding each side
+          const availH = Math.max(0, rect.height - 40);
+          if (availW <= 0 || availH <= 0) return;
+          const availRatio = availW / availH;
+          let w, h;
+          if (availRatio > ratio) {
+            // stage is wider than canvas ratio → height-limited
+            h = availH;
+            w = h * ratio;
+          } else {
+            // stage is taller than canvas ratio → width-limited
+            w = availW;
+            h = w / ratio;
+          }
+          setCanvasDims(prev => (Math.abs(prev.w - w) < 0.5 && Math.abs(prev.h - h) < 0.5) ? prev : { w, h });
+        };
+        compute();
+        const ro = new ResizeObserver(compute);
+        ro.observe(el);
+        return () => ro.disconnect();
+      }, [state.format]);
+
+      // figure out what to show
+      const activeMain = getActiveClipAt(state, 'main', state.playhead);
+      const activeOverlay = getActiveClipAt(state, 'overlay', state.playhead);
+      const activeMusic = getActiveClipAt(state, 'music', state.playhead);
+      const activeTransition = getActiveTransition(state, state.playhead);
+
+      const mainAsset = activeMain ? state.assets.find(a => a.id === activeMain.clip.assetId) : null;
+      const overlayAsset = activeOverlay ? state.assets.find(a => a.id === activeOverlay.clip.assetId) : null;
+      const musicAsset = activeMusic ? state.assets.find(a => a.id === activeMusic.clip.assetId) : null;
+      const outgoingAsset = activeTransition ? state.assets.find(a => a.id === activeTransition.outgoing.assetId) : null;
+      const incomingAsset = activeTransition ? state.assets.find(a => a.id === activeTransition.incoming.assetId) : null;
+
+      // compute active grade (per-clip overrides project)
+      const activeGrade = (activeMain?.clip.grade) || state.projectGrade;
+      const matchDelta = useMemo(() => computeMatchDelta(state.colorMatch.refPalette), [state.colorMatch.refPalette]);
+
+      // Shader params — latest values mirrored to a ref so the render loop reads
+      // current values every frame without being re-registered on each render.
+      const glParamsRef = useRef({});
+      glParamsRef.current = {
+        brightness: activeGrade.brightness,
+        contrast:   activeGrade.contrast,
+        saturate:   activeGrade.saturate,
+        blacks:     activeGrade.blacks,
+        warmth:     activeGrade.warmth || 0,
+        // auto + match are populated when those features are active; for now, inactive.
+        autoIntensity: activeGrade.autoIntensity || 0,
+        autoBlack:     activeGrade.autoBlack || 0,
+        autoWhite:     activeGrade.autoWhite || 1,
+        autoGain:      activeGrade.autoGain || [1, 1, 1],
+        matchIntensity: 0,
+        useMatchLut:    false,
+      };
+
+      // GL init + render loop. Kicks off once and stays alive for the life of PreviewStage.
+      useEffect(() => {
+        const canvas = glCanvasRef.current;
+        if (!canvas) return;
+        // Try to init WebGL
+        let gl = canvas.getContext('webgl', { preserveDrawingBuffer: false, premultipliedAlpha: true })
+              || canvas.getContext('experimental-webgl');
+        if (!gl) {
+          console.warn('WebGL unavailable — preview will fall back to raw source');
+          return;
+        }
+        let handles;
+        try {
+          handles = createGLProgram(gl);
+        } catch (err) {
+          console.warn('GL program failed:', err);
+          return;
+        }
+        glCtxRef.current = { gl, handles };
+
+        const tick = () => {
+          const ctx = glCtxRef.current;
+          if (!ctx) return;
+          // Pick a source — prefer a currently-ready video, else image, else skip
+          const vEl = videoRef.current;
+          const iEl = imgRef.current;
+          let source = null;
+          if (vEl && vEl.readyState >= 2 && vEl.videoWidth > 0) source = vEl;
+          else if (iEl && iEl.naturalWidth > 0 && iEl.complete) source = iEl;
+
+          if (source) {
+            const srcW = source.videoWidth || source.naturalWidth;
+            const srcH = source.videoHeight || source.naturalHeight;
+            if (srcW && srcH) {
+              // Keep canvas at source native dims (capped), letterbox via CSS
+              const capW = Math.min(srcW, 1920);
+              const capH = Math.round(capW * srcH / srcW);
+              if (canvas.width !== capW || canvas.height !== capH) {
+                canvas.width = capW;
+                canvas.height = capH;
+                ctx.gl.viewport(0, 0, capW, capH);
+              }
+              drawGLFrame(ctx.gl, ctx.handles, source, glParamsRef.current);
+            }
+          }
+          glRafRef.current = requestAnimationFrame(tick);
+        };
+        glRafRef.current = requestAnimationFrame(tick);
+
+        return () => {
+          if (glRafRef.current) cancelAnimationFrame(glRafRef.current);
+          glRafRef.current = null;
+          glCtxRef.current = null;
+        };
+      }, []);
+
+      // sync video seek and playback
+      // Philosophy: during playback, let the browser play naturally. Only seek when:
+      //  (a) the active clip changes, (b) play/pause toggles, (c) user scrubs (large jump).
+      // Firing this effect every frame (via state.playhead in deps) caused a feedback loop
+      // where video was always slightly behind our tracked time, we'd force-seek backward,
+      // which paused playback briefly and put us further behind.
+      const lastSyncedClipRef = useRef(null);
+      useEffect(() => {
+        if (!videoRef.current || !mainAsset || mainAsset.kind !== 'video') return;
+        const v = videoRef.current;
+        if (v.src !== mainAsset.url) {
+          v.src = mainAsset.url;
+        }
+        const clipChanged = lastSyncedClipRef.current !== activeMain?.clip.id;
+        const target = Number(activeMain.clip.trimStart || 0) + activeMain.localT * (activeMain.clip.speed || 1);
+        // Only seek when:
+        //  - clip just changed (new video or moved between clips)
+        //  - user scrubbed (paused and drift is huge — >0.5s)
+        //  - we're paused (so scrubbing is precise)
+        const shouldSeek = clipChanged
+          || (!state.isPlaying && Math.abs(v.currentTime - target) > 0.15 && isFinite(target))
+          || (state.isPlaying && Math.abs(v.currentTime - target) > 0.6 && isFinite(target));
+        if (shouldSeek) {
+          try { v.currentTime = Math.max(0, target); } catch {}
+        }
+        v.playbackRate = activeMain.clip.speed || 1;
+        v.muted = activeMain.clip.muted || (state.music.muteMainOnMusic && !!musicAsset);
+        if (state.isPlaying) { v.play().catch(() => {}); } else { v.pause(); }
+        lastSyncedClipRef.current = activeMain?.clip.id;
+        // eslint-disable-next-line
+      }, [mainAsset?.id, activeMain?.clip.id, state.isPlaying, activeMain?.clip.speed, activeMain?.clip.muted, musicAsset?.id]);
+
+      // lightweight drift-check during playback — runs on playhead change but only seeks
+      // if drift is truly large (user scrubbed while playing, or a layout hiccup)
+      useEffect(() => {
+        if (!state.isPlaying || !videoRef.current || !mainAsset || mainAsset.kind !== 'video') return;
+        const v = videoRef.current;
+        const target = Number(activeMain.clip.trimStart || 0) + activeMain.localT * (activeMain.clip.speed || 1);
+        if (isFinite(target) && Math.abs(v.currentTime - target) > 0.6) {
+          try { v.currentTime = Math.max(0, target); } catch {}
+        }
+      }, [state.playhead, activeMain?.clip.id, state.isPlaying, mainAsset?.id]);
+
+      // music sync — same philosophy
+      const lastSyncedMusicRef = useRef(null);
+      useEffect(() => {
+        if (!audioRef.current) return;
+        const a = audioRef.current;
+        if (!musicAsset) { a.pause(); return; }
+        if (a.src !== musicAsset.url) a.src = musicAsset.url;
+        const clipChanged = lastSyncedMusicRef.current !== activeMusic?.clip.id;
+        const target = Number(activeMusic.clip.trimStart || 0) + activeMusic.localT;
+        const shouldSeek = clipChanged
+          || (!state.isPlaying && Math.abs(a.currentTime - target) > 0.2 && isFinite(target))
+          || (state.isPlaying && Math.abs(a.currentTime - target) > 0.8 && isFinite(target));
+        if (shouldSeek) {
+          try { a.currentTime = Math.max(0, target); } catch {}
+        }
+        a.volume = Math.min(1, state.music.volume);
+        if (state.isPlaying) { a.play().catch(() => {}); } else { a.pause(); }
+        lastSyncedMusicRef.current = activeMusic?.clip.id;
+      }, [musicAsset?.id, activeMusic?.clip.id, state.isPlaying, state.music.volume]);
+
+      const stageStyle = canvasDims.w > 0
+        ? { width: `${canvasDims.w}px`, height: `${canvasDims.h}px` }
+        : { width: 0, height: 0, opacity: 0 };
+
+      // drag-to-pan: moves the main clip's offset within the locked frame
+      const [panning, setPanning] = useState(false);
+      const startPan = (e) => {
+        if (!activeMain || !mainAsset || mainAsset.kind === 'audio') return;
+        const stageEl = e.currentTarget;
+        const rect = stageEl.getBoundingClientRect();
+        const startX = e.clientX, startY = e.clientY;
+        const startOx = activeMain.clip.offset?.x || 0;
+        const startOy = activeMain.clip.offset?.y || 0;
+        const clipId = activeMain.clip.id;
+        setPanning(true);
+        // select this clip so the toolbar shows its controls
+        dispatch({ type: 'SELECT', track: 'main', itemId: clipId });
+        const onMove = (ev) => {
+          const dx = (ev.clientX - startX) / rect.width;
+          const dy = (ev.clientY - startY) / rect.height;
+          dispatch({
+            type: 'UPDATE_CLIP', track: 'main', id: clipId,
+            patch: { offset: { x: round2(startOx + dx), y: round2(startOy + dy) } }
+          });
+        };
+        const onUp = () => {
+          setPanning(false);
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        e.preventDefault();
+      };
+
+      const offset = activeMain?.clip.offset || { x: 0, y: 0 };
+      const scale = activeMain?.clip.scale || 1;
+      const shotTransform = `translate(${(offset.x || 0) * 100}%, ${(offset.y || 0) * 100}%) scale(${scale})`;
+
+      // corner-resize: scale via drag on corner handles. Each corner pivots the opposite corner,
+      // but for simplicity we use distance-from-center heuristic: further drag = bigger scale.
+      const startCornerResize = (e, corner) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!activeMain || !mainAsset || mainAsset.kind === 'audio') return;
+        const clipId = activeMain.clip.id;
+        const startScale = Number(activeMain.clip.scale || 1);
+        const canvasEl = stageRef.current?.querySelector('.stage-canvas');
+        if (!canvasEl) return;
+        const rect = canvasEl.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const startDist = Math.hypot(e.clientX - cx, e.clientY - cy);
+        dispatch({ type: 'SELECT', track: 'main', itemId: clipId });
+        const onMove = (ev) => {
+          const d = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+          const ratio = d / Math.max(startDist, 10);
+          const newScale = Math.max(0.5, Math.min(4, startScale * ratio));
+          dispatch({
+            type: 'UPDATE_CLIP', track: 'main', id: clipId,
+            patch: { scale: round2(newScale) }
+          });
+        };
+        const onUp = () => {
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      };
+
+      // overlay resize: corner drag scales the overlay width
+      const startOverlayResize = (e, corner) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!activeOverlay) return;
+        const clipId = activeOverlay.clip.id;
+        const pos = activeOverlay.clip.position || { x: 0.03, y: 0.03, width: 0.2 };
+        const startW = Number(pos.width || 0.2);
+        const canvasEl = stageRef.current?.querySelector('.stage-canvas');
+        if (!canvasEl) return;
+        const rect = canvasEl.getBoundingClientRect();
+        const startX = e.clientX;
+        dispatch({ type: 'SELECT', track: 'overlay', itemId: clipId });
+        const onMove = (ev) => {
+          const dx = (ev.clientX - startX) / rect.width;
+          // tr/br expand outward; tl/bl shrink
+          const sign = (corner === 'tr' || corner === 'br') ? 1 : -1;
+          const newW = Math.max(0.05, Math.min(1, startW + sign * dx));
+          dispatch({
+            type: 'UPDATE_CLIP', track: 'overlay', id: clipId,
+            patch: { position: { ...pos, width: round2(newW) } }
+          });
+        };
+        const onUp = () => {
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      };
+
+      // overlay drag-to-move within preview
+      const startOverlayMove = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!activeOverlay) return;
+        const clipId = activeOverlay.clip.id;
+        const pos = activeOverlay.clip.position || { x: 0.03, y: 0.03, width: 0.2 };
+        const canvasEl = stageRef.current?.querySelector('.stage-canvas');
+        if (!canvasEl) return;
+        const rect = canvasEl.getBoundingClientRect();
+        const startX = e.clientX, startY = e.clientY;
+        const startPx = pos.x, startPy = pos.y;
+        dispatch({ type: 'SELECT', track: 'overlay', itemId: clipId });
+        const onMove = (ev) => {
+          const dx = (ev.clientX - startX) / rect.width;
+          const dy = (ev.clientY - startY) / rect.height;
+          dispatch({
+            type: 'UPDATE_CLIP', track: 'overlay', id: clipId,
+            patch: { position: { ...pos, x: round2(Math.max(0, Math.min(1 - pos.width, startPx + dx))), y: round2(Math.max(0, Math.min(0.95, startPy + dy))) } }
+          });
+        };
+        const onUp = () => {
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      };
+
+      const overlaySelected = activeOverlay && state.selection.track === 'overlay' && state.selection.itemId === activeOverlay.clip.id;
+      const mainSelected = activeMain && state.selection.track === 'main' && state.selection.itemId === activeMain.clip.id;
+
+      // compute transition styles if a transition is active
+      const transitionFx = activeTransition ? transitionStyles(activeTransition.type, activeTransition.progress) : null;
+      // Note: main-shot grading happens in the WebGL shader. shotStyle only carries transform
+      // + transition-driven opacity/clip/filter (for wipes/whip blur during transition).
+      const shotStyleBase = { transform: shotTransform };
+      const shotStyle = transitionFx
+        ? {
+            ...shotStyleBase,
+            opacity: transitionFx.out.opacity ?? 1,
+            clipPath: transitionFx.out.clipPath,
+            filter: transitionFx.out.filter,
+            transform: [shotTransform, transitionFx.out.transform].filter(Boolean).join(' '),
+          }
+        : shotStyleBase;
+
+      return (
+        <div className="stage" ref={stageRef}>
+          {!mainAsset ? (
+            <div className="stage-empty">
+              <div className="icon">▷</div>
+              <div>Load media in the left rail, then drag or double-click onto the timeline.</div>
+            </div>
+          ) : (
+            <div
+              className={`stage-canvas ${panning ? 'dragging' : ''} ${mainAsset.kind === 'audio' ? 'no-drag' : ''}`}
+              style={stageStyle}
+              onMouseDown={startPan}
+            >
+              <div className={`stage-shot ${mainAsset.kind !== 'audio' ? 'gl-active' : ''}`} style={shotStyle}>
+                {mainAsset.kind === 'video' ? (
+                  <video
+                    ref={videoRef}
+                    className="stage-video"
+                    playsInline
+                    muted={activeMain.clip.muted || (state.music.muteMainOnMusic && !!musicAsset)}
+                  />
+                ) : mainAsset.kind === 'image' ? (
+                  <img
+                    key={mainAsset.id}
+                    ref={imgRef}
+                    src={mainAsset.url}
+                    className="stage-img"
+                    alt=""
+                    draggable={false}
+                    crossOrigin="anonymous"
+                  />
+                ) : (
+                  <div className="stage-audio-viz">audio clip: {mainAsset.name}</div>
+                )}
+                {mainAsset.kind !== 'audio' && (
+                  <canvas ref={glCanvasRef} className="stage-gl-canvas" />
+                )}
+              </div>
+
+              {/* Incoming clip layer during transition */}
+              {activeTransition && incomingAsset && incomingAsset.kind !== 'audio' && (
+                <div
+                  className="stage-transition-layer"
+                  style={{
+                    opacity: transitionFx.inc.opacity ?? 0,
+                    clipPath: transitionFx.inc.clipPath,
+                    filter: transitionFx.inc.filter,
+                    transform: transitionFx.inc.transform,
+                  }}
+                >
+                  {incomingAsset.kind === 'video' ? (
+                    <video
+                      key={`trans-${activeTransition.incoming.id}`}
+                      src={incomingAsset.url}
+                      className="stage-transition-media"
+                      playsInline
+                      muted
+                      autoPlay={state.isPlaying}
+                    />
+                  ) : (
+                    <img
+                      key={`trans-${activeTransition.incoming.id}`}
+                      src={incomingAsset.url}
+                      className="stage-transition-media"
+                      alt=""
+                      draggable={false}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* White/black wash for fade-to transitions */}
+              {activeTransition && activeTransition.type === 'fadeBlack' && (
+                <div
+                  style={{
+                    position: 'absolute', inset: 0, background: '#000', pointerEvents: 'none',
+                    opacity: 1 - Math.abs(activeTransition.progress - 0.5) * 2,
+                    zIndex: 6,
+                  }}
+                />
+              )}
+              {activeTransition && activeTransition.type === 'fadeWhite' && (
+                <div
+                  style={{
+                    position: 'absolute', inset: 0, background: '#fff', pointerEvents: 'none',
+                    opacity: (1 - Math.abs(activeTransition.progress - 0.5) * 2) * 0.85,
+                    zIndex: 6,
+                  }}
+                />
+              )}
+
+              {/* Rule-of-thirds grid */}
+              {state.showGrid && <div className="stage-grid" />}
+
+              {/* Corner resize handles for main clip */}
+              {mainSelected && mainAsset.kind !== 'audio' && (
+                <>
+                  <div className="resize-corner tl" onMouseDown={(e) => startCornerResize(e, 'tl')} title="Drag to scale" />
+                  <div className="resize-corner tr" onMouseDown={(e) => startCornerResize(e, 'tr')} title="Drag to scale" />
+                  <div className="resize-corner bl" onMouseDown={(e) => startCornerResize(e, 'bl')} title="Drag to scale" />
+                  <div className="resize-corner br" onMouseDown={(e) => startCornerResize(e, 'br')} title="Drag to scale" />
+                </>
+              )}
+
+              {overlayAsset && overlayAsset.kind === 'image' && (
+                <div
+                  className={`stage-overlay-wrap ${overlaySelected ? 'selected' : ''}`}
+                  style={{
+                    top: `${(activeOverlay.clip.position?.y || 0.03) * 100}%`,
+                    left: `${(activeOverlay.clip.position?.x || 0.03) * 100}%`,
+                    width: `${(activeOverlay.clip.position?.width || 0.2) * 100}%`,
+                  }}
+                  onMouseDown={startOverlayMove}
+                  title="Drag to move · corners to resize"
+                >
+                  <img src={overlayAsset.url} alt="" draggable={false} style={{ width: '100%', display: 'block', pointerEvents: 'none' }} />
+                  <div className="resize-corner tl" onMouseDown={(e) => startOverlayResize(e, 'tl')} />
+                  <div className="resize-corner tr" onMouseDown={(e) => startOverlayResize(e, 'tr')} />
+                  <div className="resize-corner bl" onMouseDown={(e) => startOverlayResize(e, 'bl')} />
+                  <div className="resize-corner br" onMouseDown={(e) => startOverlayResize(e, 'br')} />
+                </div>
+              )}
+
+              {/* Grid toggle button */}
+              <div
+                className={`grid-toggle ${state.showGrid ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dispatch({ type: 'PATCH', patch: { showGrid: !state.showGrid } });
+                }}
+                title="Toggle rule-of-thirds grid"
+              >⊞ grid</div>
+            </div>
+          )}
+
+          <audio ref={audioRef} />
+        </div>
+      );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   TRANSPORT
+    // ──────────────────────────────────────────────────────────────
+    function Transport({ state, dispatch, reelLen }) {
+      return (
+        <div className="transport">
+          <button
+            className="btn icon"
+            title="Prev clip"
+            onClick={() => {
+              const items = state.tracks.main;
+              const starts = getMainStarts(items);
+              let target = 0;
+              for (let i = starts.length - 1; i >= 0; i--) {
+                if (starts[i] < state.playhead - 0.01) { target = starts[i]; break; }
+              }
+              dispatch({ type: 'SET_PLAYHEAD', t: target });
+            }}
+          >⏮</button>
+          <button
+            className="btn primary icon"
+            onClick={() => dispatch({ type: 'SET_PLAYING', playing: !state.isPlaying })}
+            title={state.isPlaying ? 'Pause' : 'Play'}
+          >{state.isPlaying ? '⏸' : '▶'}</button>
+          <button
+            className="btn icon"
+            title="Next clip"
+            onClick={() => {
+              const items = state.tracks.main;
+              const starts = getMainStarts(items);
+              let target = reelLen;
+              for (let i = 0; i < starts.length; i++) {
+                if (starts[i] > state.playhead + 0.01) { target = starts[i]; break; }
+              }
+              dispatch({ type: 'SET_PLAYHEAD', t: target });
+            }}
+          >⏭</button>
+          <div className="scrub">
+            <input
+              type="range"
+              min="0"
+              max={Math.max(reelLen, state.targetLength || 1)}
+              step="0.05"
+              value={state.playhead}
+              onChange={(e) => dispatch({ type: 'SET_PLAYHEAD', t: Number(e.target.value) })}
+            />
+          </div>
+          <span className="tc">{fmtTC(state.playhead)} / {fmtTC(reelLen)}</span>
+        </div>
+      );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   TIMELINE
+    // ──────────────────────────────────────────────────────────────
+    function Timeline({ state, dispatch, reelLen, pushToast }) {
+      const basePxPerSec = 40;
+      const pxPerSec = basePxPerSec * state.zoom;
+      const totalSec = Math.max(reelLen, state.targetLength || 15);
+      const totalWidth = Math.max(600, totalSec * pxPerSec + 40);
+      const bodyRef = useRef(null);
+
+      const onLaneDrop = (e, track) => {
+        e.preventDefault();
+        const assetId = e.dataTransfer.getData('text/asset-id');
+        if (!assetId) return;
+        const asset = state.assets.find(a => a.id === assetId);
+        if (!asset) return;
+        const reel = getReelLength(state);
+        const clip = defaultClip(track, asset, state.targetLength, reel);
+        dispatch({ type: 'ADD_CLIP', track, clip });
+      };
+
+      const onScrubRuler = (e) => {
+        const ruler = e.currentTarget;
+        const rect = ruler.getBoundingClientRect();
+        const seek = (clientX) => {
+          const x = clientX - rect.left + (bodyRef.current?.scrollLeft || 0);
+          // subtract 60 because ticks start after the lane-label column (label column is sticky-left at x=0..60)
+          const t = Math.max(0, Math.min(totalSec, (x - 60) / pxPerSec));
+          dispatch({ type: 'SET_PLAYHEAD', t });
+        };
+        seek(e.clientX);
+        const onMove = (ev) => seek(ev.clientX);
+        const onUp = () => {
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      };
+
+      // playhead drag handler — activates when user grabs the playhead itself
+      const [playheadDragging, setPlayheadDragging] = useState(false);
+      const startPlayheadDrag = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        setPlayheadDragging(true);
+        // Use the scroll container's rect so we can factor in horizontal scroll correctly
+        const scrollEl = bodyRef.current;
+        const contentLeft = scrollEl ? scrollEl.getBoundingClientRect().left : 0;
+        const seek = (clientX) => {
+          const scrollLeft = scrollEl?.scrollLeft || 0;
+          // x is measured from the left edge of the scrollable timeline content
+          const x = clientX - contentLeft + scrollLeft;
+          // subtract the 60px lane-label width to get time-axis position
+          const t = Math.max(0, Math.min(totalSec, (x - 60) / pxPerSec));
+          dispatch({ type: 'SET_PLAYHEAD', t });
+        };
+        seek(e.clientX);
+        const onMove = (ev) => seek(ev.clientX);
+        const onUp = () => {
+          setPlayheadDragging(false);
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      };
+
+      // show the currently active main clip's role in the head
+      const activeMain = getActiveClipAt(state, 'main', state.playhead);
+
+      return (
+        <div className="timeline-wrap">
+          <div className="timeline-head">
+            <span className="sec-label">Timeline</span>
+            {activeMain && (
+              <span className="chip" style={{ padding: '2px 8px', fontSize: 10 }} title={activeMain.clip.label}>
+                {activeMain.clip.role || activeMain.clip.kind}
+              </span>
+            )}
+            <div className="zoom-group">
+              <button className="btn tiny ghost icon" onClick={() => dispatch({ type: 'SET_ZOOM', zoom: state.zoom - 0.25 })}>−</button>
+              <input
+                type="range"
+                min="0.25" max="20" step="0.25"
+                value={state.zoom}
+                onChange={(e) => dispatch({ type: 'SET_ZOOM', zoom: Number(e.target.value) })}
+              />
+              <button className="btn tiny ghost icon" onClick={() => dispatch({ type: 'SET_ZOOM', zoom: state.zoom + 0.25 })}>+</button>
+              <span className="micro font-mono">{state.zoom.toFixed(2)}×</span>
+              <button className="btn tiny ghost" onClick={() => dispatch({ type: 'SET_ZOOM', zoom: 1 })}>Fit</button>
+            </div>
+            <div style={{ flex: 1 }} />
+            <span className="micro font-mono">{fmtTC(state.playhead)} / {fmtTC(reelLen)}</span>
+            <span className="micro">{state.tracks.main.length} main · {state.tracks.overlay.length} overlay · {state.tracks.music.length} music</span>
+          </div>
+          <div className="timeline-body" ref={bodyRef}>
+            <div style={{ width: totalWidth, position: 'relative' }}>
+              <div className="ruler" style={{ width: totalWidth }} onMouseDown={onScrubRuler}>
+                {/* ticks */}
+                {(() => {
+                  // choose tick interval based on zoom
+                  let interval = 1;
+                  if (pxPerSec < 20) interval = 5;
+                  else if (pxPerSec < 40) interval = 2;
+                  else if (pxPerSec < 100) interval = 1;
+                  else interval = 0.5;
+                  const ticks = [];
+                  for (let t = 0; t <= totalSec; t += interval) {
+                    ticks.push(
+                      <div key={t} className="ruler-tick" style={{ left: t * pxPerSec + 60 }}>
+                        {fmtTC(t)}
+                      </div>
+                    );
+                  }
+                  return ticks;
+                })()}
+              </div>
+              <div className="lanes" style={{ width: totalWidth }}>
+                <Lane
+                  track="overlay"
+                  label="Overlay"
+                  hint="badge · logo"
+                  state={state}
+                  dispatch={dispatch}
+                  pxPerSec={pxPerSec}
+                  pushToast={pushToast}
+                  onDrop={(e) => onLaneDrop(e, 'overlay')}
+                />
+                <Lane
+                  track="main"
+                  label="Main"
+                  hint="drag·reorder · ctrl+click video = queue for match"
+                  state={state}
+                  dispatch={dispatch}
+                  pxPerSec={pxPerSec}
+                  pushToast={pushToast}
+                  onDrop={(e) => onLaneDrop(e, 'main')}
+                />
+                <Lane
+                  track="music"
+                  label="Music"
+                  hint="bed"
+                  state={state}
+                  dispatch={dispatch}
+                  pxPerSec={pxPerSec}
+                  pushToast={pushToast}
+                  onDrop={(e) => onLaneDrop(e, 'music')}
+                />
+                <div
+                  className={`playhead ${playheadDragging ? 'dragging' : ''}`}
+                  style={{ left: state.playhead * pxPerSec + 60 }}
+                  onMouseDown={startPlayheadDrag}
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}
+                  title="Drag to scrub"
+                >
+                  <div className="playhead-head" />
+                  <div className="playhead-line" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function Lane({ track, label, hint, state, dispatch, pxPerSec, onDrop, pushToast }) {
+      const items = state.tracks[track];
+      const starts = track === 'main' ? getMainStarts(items) : items.map(c => Number(c.start || 0));
+      const [dragOver, setDragOver] = useState(null); // index
+      const [transitionPopover, setTransitionPopover] = useState(null); // { clipId, x, y }
+
+      // close transition popover on outside click
+      useEffect(() => {
+        if (!transitionPopover) return;
+        const close = (e) => {
+          if (e.target.closest && e.target.closest('.transition-popover')) return;
+          setTransitionPopover(null);
+        };
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+      }, [transitionPopover]);
+
+      const [trimDrag, setTrimDrag] = useState(null);
+      useEffect(() => {
+        if (!trimDrag) return;
+        const onMove = (e) => {
+          const dx = (e.clientX || e.pageX) - trimDrag.startX;
+          const dSec = dx / pxPerSec;
+          const item = state.tracks[trimDrag.track].find(c => c.id === trimDrag.itemId);
+          if (!item) return;
+          // if user manually resizes an overlay, stop auto-fitting it
+          const extraPatch = trimDrag.track === 'overlay' ? { autoFit: false } : {};
+          if (trimDrag.edge === 'right') {
+            const newDur = Math.max(0.1, round2(trimDrag.startDur + dSec));
+            dispatch({ type: 'UPDATE_CLIP', track: trimDrag.track, id: trimDrag.itemId, patch: { duration: newDur, ...extraPatch } });
+          } else {
+            const newTrim = Math.max(0, round2(trimDrag.startTrim + dSec));
+            const delta = newTrim - trimDrag.startTrim;
+            const newDur = Math.max(0.1, round2(trimDrag.startDur - delta));
+            dispatch({ type: 'UPDATE_CLIP', track: trimDrag.track, id: trimDrag.itemId, patch: { trimStart: newTrim, duration: newDur, ...extraPatch } });
+          }
+        };
+        const onUp = () => setTrimDrag(null);
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+        // eslint-disable-next-line
+      }, [trimDrag, pxPerSec]);
+
+      const startTrimDrag = (e, clip, edge) => {
+        e.stopPropagation();
+        e.preventDefault();
+        setTrimDrag({
+          track,
+          itemId: clip.id,
+          edge,
+          startX: e.clientX,
+          startDur: Number(clip.duration || 0),
+          startTrim: Number(clip.trimStart || 0),
+        });
+      };
+
+      // reorder drag (main lane only) — drop is handled at lane level, clip only tracks dragOver index
+      const onClipDragStart = (e, idx) => {
+        e.dataTransfer.setData('text/clip-reorder', String(idx));
+        e.dataTransfer.effectAllowed = 'move';
+      };
+      const onClipDragOver = (e, idx) => {
+        e.preventDefault();
+        if (track === 'main') setDragOver(idx);
+      };
+
+      const onLaneDrop = (e) => {
+        e.preventDefault();
+        const reorderFrom = e.dataTransfer.getData('text/clip-reorder');
+        if (reorderFrom !== '' && track === 'main' && dragOver != null) {
+          const fromIdx = Number(reorderFrom);
+          if (fromIdx !== dragOver) {
+            dispatch({ type: 'REORDER_CLIPS', track: 'main', from: fromIdx, to: dragOver });
+          }
+        } else {
+          // asset drop — delegate to parent handler
+          onDrop(e);
+        }
+        setDragOver(null);
+      };
+
+      return (
+        <div
+          className="lane"
+          onDragOver={(e) => { e.preventDefault(); }}
+          onDrop={onLaneDrop}
+          onDragLeave={() => setDragOver(null)}
+        >
+          <div className="lane-label">
+            {label}
+            <span className="hint">{hint}</span>
+          </div>
+          <div className="lane-track" style={{ width: 'auto', minWidth: 0, flex: 1 }}>
+            {items.map((clip, idx) => {
+              const start = starts[idx];
+              const left = start * pxPerSec;
+              const width = Math.max(12, Number(clip.duration || 0) * pxPerSec);
+              const isSelected = state.selection.track === track && state.selection.itemId === clip.id;
+              const asset = state.assets.find(a => a.id === clip.assetId);
+              const thumbUrl = asset?.kind === 'image' ? asset.url : null;
+              const hasCustomGrade = !!clip.grade;
+              const isQueued = (state.colorMatch.queue || []).includes(clip.id);
+              return (
+                <div
+                  key={clip.id}
+                  className={`clip ${track}-clip ${isSelected ? 'selected' : ''}`}
+                  style={{ left, width }}
+                  draggable={track === 'main'}
+                  onDragStart={(e) => onClipDragStart(e, idx)}
+                  onDragOver={(e) => onClipDragOver(e, idx)}
+                  onClick={(e) => {
+                    // Ctrl/Cmd + click on a main-track video = toggle match queue
+                    if ((e.ctrlKey || e.metaKey) && track === 'main') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (clip.kind === 'image') {
+                        pushToast?.('Stills set the tone — queue videos instead', 'warn');
+                        return;
+                      }
+                      if (!state.colorMatch.refAssetId) {
+                        pushToast?.('Pick a reference image first in the Match tab', 'warn', 3000);
+                        return;
+                      }
+                      const cur = state.colorMatch.queue || [];
+                      const next = cur.includes(clip.id)
+                        ? cur.filter(x => x !== clip.id)
+                        : [...cur, clip.id];
+                      dispatch({ type: 'PATCH_COLOR_MATCH', patch: { queue: next } });
+                      pushToast?.(
+                        next.includes(clip.id)
+                          ? `Queued for match (${next.length} total)`
+                          : `Unqueued (${next.length} remaining)`,
+                        'good', 1500
+                      );
+                      return;
+                    }
+                    dispatch({ type: 'SELECT', track, itemId: clip.id });
+                  }}
+                  title={track === 'main' && clip.kind !== 'image'
+                    ? 'Click to select · Ctrl/Cmd+click to queue for tone match'
+                    : 'Click to select'}
+                >
+                  {thumbUrl && <div className="clip-thumb" style={{ backgroundImage: `url(${thumbUrl})` }} />}
+                  <div className="clip-handle left" onMouseDown={(e) => startTrimDrag(e, clip, 'left')} />
+                  <div className="clip-handle right" onMouseDown={(e) => startTrimDrag(e, clip, 'right')} />
+                  {clip.speed && clip.speed !== 1 && <div className="clip-speed-badge">{clip.speed}×</div>}
+                  {hasCustomGrade && (
+                    <div className="clip-grade-dot" title="Custom grade — matched to stills or manually set" />
+                  )}
+                  {isQueued && (
+                    <div className="clip-queued-dot" title="Queued for tone match — hit Match in the Match tab to apply" />
+                  )}
+                  <div className="clip-body">
+                    <div className="clip-label">{clip.role || clip.label}</div>
+                    <div className="clip-meta">{round2(clip.duration)}s {clip.muted ? '· muted' : ''}</div>
+                  </div>
+                </div>
+              );
+            })}
+            {dragOver != null && track === 'main' && starts[dragOver] != null && (
+              <div className="drop-indicator" style={{ left: starts[dragOver] * pxPerSec }} />
+            )}
+
+            {/* Transition markers between main-track clips */}
+            {track === 'main' && items.slice(1).map((clip, idx) => {
+              const actualIdx = idx + 1;
+              const boundary = starts[actualIdx];
+              const tIn = clip.transitionIn || { type: 'cut', duration: 0 };
+              const isActive = tIn.type !== 'cut' && tIn.duration > 0;
+              return (
+                <div
+                  key={`trans-${clip.id}`}
+                  className={`transition-marker ${isActive ? 'active' : ''}`}
+                  style={{ left: boundary * pxPerSec }}
+                  title={isActive ? `${TRANSITIONS[tIn.type]?.label || tIn.type} · ${tIn.duration}s — click to edit` : 'No transition · click to add'}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setTransitionPopover({
+                      clipId: clip.id,
+                      x: rect.left,
+                      y: rect.top,
+                    });
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                />
+              );
+            })}
+
+            {/* Transition popover */}
+            {transitionPopover && track === 'main' && (() => {
+              const clip = items.find(c => c.id === transitionPopover.clipId);
+              if (!clip) return null;
+              const tIn = clip.transitionIn || { type: 'cut', duration: 0 };
+              const popW = 220;
+              const popH = 340;
+              let left = transitionPopover.x - popW / 2 + 8;
+              let top = transitionPopover.y - popH - 8;
+              if (top < 10) top = transitionPopover.y + 24;
+              if (left < 10) left = 10;
+              if (left + popW > window.innerWidth - 10) left = window.innerWidth - popW - 10;
+              return (
+                <div
+                  className="transition-popover"
+                  style={{ left, top, width: popW }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <div className="sec-label" style={{ marginBottom: 8 }}>Transition</div>
+                  <div className="trans-row">
+                    {Object.entries(TRANSITIONS).map(([k, v]) => (
+                      <div
+                        key={k}
+                        className={`trans-opt ${tIn.type === k ? 'active' : ''}`}
+                        onClick={() => {
+                          const newDur = k === 'cut' ? 0 : (tIn.duration || DEFAULT_TRANSITION_DUR);
+                          dispatch({
+                            type: 'UPDATE_CLIP', track: 'main', id: clip.id,
+                            patch: { transitionIn: { type: k, duration: Math.min(newDur, v.maxDur || 2) } }
+                          });
+                          if (k === 'cut') setTransitionPopover(null);
+                        }}
+                      >
+                        <div className="dot" />
+                        <span>{v.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {tIn.type !== 'cut' && (
+                    <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                        <span className="sec-label">Duration</span>
+                        <span className="font-mono" style={{ fontSize: 12, color: 'var(--text)' }}>
+                          {(tIn.duration || 0).toFixed(1)}s
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.1"
+                        max={TRANSITIONS[tIn.type]?.maxDur || 2}
+                        step="0.1"
+                        value={tIn.duration || DEFAULT_TRANSITION_DUR}
+                        onChange={(e) => dispatch({
+                          type: 'UPDATE_CLIP', track: 'main', id: clip.id,
+                          patch: { transitionIn: { ...tIn, duration: Number(e.target.value) } }
+                        })}
+                        style={{ width: '100%' }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2, fontSize: 10, color: 'var(--mutedder)', fontFamily: 'Geist Mono' }}>
+                        <span>0.1s</span>
+                        <span>{(TRANSITIONS[tIn.type]?.maxDur || 2).toFixed(1)}s</span>
+                      </div>
+                    </div>
+                  )}
+                  <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end' }}>
+                    <button className="btn tiny ghost" onClick={() => setTransitionPopover(null)}>Close</button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   RIGHT DRAWER
+    // ──────────────────────────────────────────────────────────────
+    function RightDrawer({ state, dispatch, activeTab, setActiveTab, collapsed, pushToast }) {
+      if (collapsed) return null;
+      return (
+        <aside className="drawer">
+          <div className="drawer-tabs">
+            {['match', 'ai', 'style', 'brief'].map(tab => (
+              <div
+                key={tab}
+                className={`drawer-tab ${activeTab === tab ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab === 'match' ? 'Match' : tab === 'ai' ? 'AI' : tab === 'style' ? 'Style' : 'Brief'}
+              </div>
+            ))}
+          </div>
+          <div className="drawer-body">
+            {activeTab === 'match' && <MatchTab state={state} dispatch={dispatch} pushToast={pushToast} />}
+            {activeTab === 'ai' && <AITab state={state} dispatch={dispatch} pushToast={pushToast} />}
+            {activeTab === 'style' && <StyleTab state={state} dispatch={dispatch} />}
+            {activeTab === 'brief' && <BriefTab state={state} dispatch={dispatch} pushToast={pushToast} />}
+          </div>
+        </aside>
+      );
+    }
+
+    function MatchTab({ state, dispatch, pushToast }) {
+      const refs = state.assets.filter(a => a.isRef);
+      const activeRef = state.assets.find(a => a.id === state.colorMatch.refAssetId);
+      const pal = state.colorMatch.refPalette;
+      const delta = useMemo(() => computeMatchDelta(pal), [pal]);
+      const strength = state.colorMatch.strength;
+      const queue = state.colorMatch.queue || [];
+      const queueCount = queue.length;
+
+      // preview the actual multipliers being applied
+      const preview = delta ? (() => {
+        const s = strength;
+        const satMul = 1 + ((delta.saturation / 0.3) - 1) * s * 0.5;
+        const brMul  = 1 + ((delta.lightness  / 0.5) - 1) * s * 0.4;
+        const sepiaAmt = Math.max(0, delta.warmth) * s * 0.4;
+        return { satMul, brMul, sepiaAmt, warmth: delta.warmth };
+      })() : null;
+
+      // apply tone match to all queued clips — bakes current grade + match delta into each clip's grade override
+      const applyMatchToQueue = () => {
+        if (!delta || queueCount === 0) return;
+        const s = strength;
+        const satMul = 1 + ((delta.saturation / 0.3) - 1) * s * 0.5;
+        const brMul  = 1 + ((delta.lightness  / 0.5) - 1) * s * 0.4;
+        const sepiaAmt = Math.max(0, delta.warmth) * s * 0.4;
+        // bake: start from project grade, multiply by match deltas
+        const pg = state.projectGrade;
+        const bakedGrade = {
+          brightness: round2(pg.brightness * brMul),
+          contrast: round2(pg.contrast),
+          saturate: round2(pg.saturate * satMul),
+          blacks: pg.blacks,
+          warmth: round2((pg.warmth || 0) + sepiaAmt),
+          preset: 'matched',
+        };
+        let applied = 0;
+        queue.forEach((clipId) => {
+          // find which track the clip lives on
+          for (const track of ['main', 'overlay']) {
+            if (state.tracks[track].find(c => c.id === clipId)) {
+              dispatch({
+                type: 'UPDATE_CLIP', track, id: clipId,
+                patch: { grade: bakedGrade, matchSnapshot: { refAssetId: state.colorMatch.refAssetId, strength } }
+              });
+              applied++;
+              break;
+            }
+          }
+        });
+        dispatch({ type: 'PATCH_COLOR_MATCH', patch: { queue: [] } });
+        pushToast(`Tone matched to ${applied} clip${applied === 1 ? '' : 's'}`, 'good');
+      };
+
+      return (
+        <>
+          <div>
+            <h3>Tone match</h3>
+            <p className="hint">
+              <strong>1.</strong> Pick a reference image. <strong>2.</strong> Ctrl/Cmd+click video
+              clips on the timeline to queue them. <strong>3.</strong> Tap Match to apply.
+            </p>
+          </div>
+
+          <div>
+            <div className="sec-label" style={{ marginBottom: 6 }}>1 · Reference</div>
+            {refs.length === 0 ? (
+              <div className="ai-card">
+                <div className="desc">Pin images as refs via right-click in the library, or the button below.</div>
+                <button className="btn tiny" onClick={() => {
+                  const first = state.assets.find(a => a.kind === 'image');
+                  if (first) dispatch({ type: 'TOGGLE_REF', id: first.id });
+                  else pushToast('Upload an image first', 'warn');
+                }}>Pin first image as ref</button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {refs.map(a => (
+                  <div
+                    key={a.id}
+                    className={`ref-chip ${state.colorMatch.refAssetId === a.id ? 'active' : ''}`}
+                    style={{ width: 48, height: 48 }}
+                    onClick={() => dispatch({ type: 'PATCH_COLOR_MATCH', patch: { refAssetId: state.colorMatch.refAssetId === a.id ? null : a.id } })}
+                  >
+                    <img src={a.url} alt="" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {activeRef && pal && (
+            <>
+              <div className="match-preview">
+                <div className="swatch-stack">
+                  <div className="swatch-label">Sampled swatches</div>
+                  <div className="swatch-row">
+                    {(pal.swatches || []).slice(0, 8).map((rgb, i) => (
+                      <div key={i} className="swatch-dot" style={{ background: `rgb(${rgb.join(',')})` }} />
+                    ))}
+                  </div>
+                  <div className="swatch-label">Subject · overall</div>
+                  <div className="swatch-row" style={{ height: 18 }}>
+                    <div className="swatch-dot" style={{ background: `rgb(${(pal.satRgb || pal.avgRgb).map(v => Math.round(v)).join(',')})` }} title="Saturation-weighted subject color" />
+                    <div className="swatch-dot" style={{ background: `rgb(${pal.avgRgb.map(v => Math.round(v)).join(',')})` }} title="Unweighted average" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="sec-label" style={{ marginBottom: 6 }}>Strength</div>
+                <div className="slider-row">
+                  <label></label>
+                  <input type="range" min="0" max="1" step="0.05"
+                    value={state.colorMatch.strength}
+                    onChange={(e) => dispatch({ type: 'PATCH_COLOR_MATCH', patch: { strength: Number(e.target.value) } })}
+                  />
+                  <span className="val">{Math.round(state.colorMatch.strength * 100)}%</span>
+                </div>
+              </div>
+
+              <div>
+                <div className="sec-label" style={{ marginBottom: 6 }}>2 · Queue <span style={{ color: queueCount > 0 ? 'var(--warn)' : 'var(--mutedder)', fontWeight: 600 }}>({queueCount})</span></div>
+                {queueCount === 0 ? (
+                  <p className="hint">Ctrl/Cmd+click video clips on the timeline to queue them. Queued clips show a yellow dot.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {queue.map(cid => {
+                      const clip = [...state.tracks.main, ...state.tracks.overlay].find(c => c.id === cid);
+                      if (!clip) return null;
+                      return (
+                        <div key={cid} style={{ display: 'flex', gap: 8, fontSize: 11, color: 'var(--muted)', alignItems: 'center' }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--warn)', flexShrink: 0 }} />
+                          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clip.label}</span>
+                          <button
+                            className="btn ghost tiny"
+                            style={{ padding: '1px 6px', fontSize: 10 }}
+                            onClick={() => dispatch({ type: 'PATCH_COLOR_MATCH', patch: { queue: queue.filter(x => x !== cid) } })}
+                          >×</button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <div className="sec-label" style={{ marginBottom: 6 }}>3 · Apply</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    className="btn primary"
+                    disabled={queueCount === 0}
+                    onClick={applyMatchToQueue}
+                    style={{ flex: 1 }}
+                  >
+                    {queueCount === 0 ? 'Queue clips first' : `Match ${queueCount} clip${queueCount === 1 ? '' : 's'}`}
+                  </button>
+                  {queueCount > 0 && (
+                    <button
+                      className="btn tiny ghost"
+                      onClick={() => dispatch({ type: 'PATCH_COLOR_MATCH', patch: { queue: [] } })}
+                    >Clear</button>
+                  )}
+                </div>
+              </div>
+
+              {preview && (
+                <div className="ai-card" style={{ gap: 4 }}>
+                  <div className="sec-label">Will apply (at current strength)</div>
+                  <div className="micro font-mono" style={{ lineHeight: 1.8, color: 'var(--muted)' }}>
+                    saturate: {preview.satMul.toFixed(2)}×<br/>
+                    brightness: {preview.brMul.toFixed(2)}×<br/>
+                    {preview.sepiaAmt > 0.02
+                      ? `warmth (sepia): ${Math.round(preview.sepiaAmt * 100)}%`
+                      : preview.warmth < -0.05
+                        ? 'cool ref — slight blue shift'
+                        : 'neutral warmth'}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </>
+      );
+    }
+
+    function AITab({ state, dispatch, pushToast }) {
+      const sel = state.selection;
+      const selectedClip = sel.itemId ? state.tracks[sel.track]?.find(c => c.id === sel.itemId) : null;
+      const selectedAsset = selectedClip ? state.assets.find(a => a.id === selectedClip.assetId) : null;
+
+      const noteOn = (flag, label) => {
+        if (!selectedClip) { pushToast('Select a clip first', 'warn'); return; }
+        const patch = { aiFlags: { ...(selectedClip.aiFlags || {}), [flag]: !selectedClip.aiFlags?.[flag] } };
+        dispatch({ type: 'UPDATE_CLIP', track: sel.track, id: sel.itemId, patch });
+        pushToast(`${label} ${patch.aiFlags[flag] ? 'queued' : 'unqueued'} for clip`, 'good', 1800);
+      };
+
+      return (
+        <>
+          <div>
+            <h3>AI fixes</h3>
+            <p className="hint">BG removal runs in-browser (real). Other fixes are queued into the brief for external processing.</p>
+          </div>
+
+          <div className="ai-card real">
+            <div className="row">
+              <h4>Remove background</h4>
+              <span style={{ fontSize: 9, padding: '1px 5px', background: 'rgba(108,224,182,.15)', color: 'var(--good)', borderRadius: 3, fontFamily: 'Geist Mono' }}>REAL</span>
+            </div>
+            <div className="desc">Isolate the ring from its background. Runs locally via ONNX, replaces the clip's image with a transparent PNG.</div>
+            <button className="btn primary tiny" disabled={!selectedClip || selectedClip.kind !== 'image'} onClick={() => pushToast('Use the "Remove BG" button in the bottom toolbar', 'good')}>
+              {selectedClip?.kind === 'image' ? 'Use toolbar button' : 'Select an image clip'}
+            </button>
+          </div>
+
+          <div className="ai-card stub">
+            <div className="row">
+              <h4>Auto reframe</h4>
+              <span className="stub-tag">QUEUED</span>
+            </div>
+            <div className="desc">Detect the ring and crop the frame toward it for the target aspect ratio.</div>
+            <button className="btn tiny" disabled={!selectedClip} onClick={() => noteOn('reframe', 'Auto reframe')}>
+              {selectedClip?.aiFlags?.reframe ? '✓ queued' : 'Queue for clip'}
+            </button>
+          </div>
+
+          <div className="ai-card stub">
+            <div className="row">
+              <h4>Enhance still</h4>
+              <span className="stub-tag">QUEUED</span>
+            </div>
+            <div className="desc">Denoise, sharpen, upscale, relight. External pass.</div>
+            <button className="btn tiny" disabled={!selectedClip} onClick={() => noteOn('enhance', 'Enhance')}>
+              {selectedClip?.aiFlags?.enhance ? '✓ queued' : 'Queue for clip'}
+            </button>
+          </div>
+
+          <div className="ai-card stub">
+            <div className="row">
+              <h4>Fix exposure & white balance</h4>
+              <span className="stub-tag">QUEUED</span>
+            </div>
+            <div className="desc">Neutralize casts, correct under/over exposure.</div>
+            <button className="btn tiny" disabled={!selectedClip} onClick={() => noteOn('exposure', 'Exposure fix')}>
+              {selectedClip?.aiFlags?.exposure ? '✓ queued' : 'Queue for clip'}
+            </button>
+          </div>
+
+          {selectedAsset && selectedAsset.kind === 'image' && !selectedAsset.isRef && (
+            <button className="btn tiny good" onClick={() => dispatch({ type: 'TOGGLE_REF', id: selectedAsset.id })}>
+              Pin this image as color ref
+            </button>
+          )}
+        </>
+      );
+    }
+
+    function StyleTab({ state, dispatch }) {
+      const g = state.projectGrade;
+      return (
+        <>
+          <div>
+            <h3>Project style</h3>
+            <p className="hint">Grade applies to the preview and bakes into exports. Individual clips can override.</p>
+          </div>
+
+          <div>
+            <div className="sec-label" style={{ marginBottom: 8 }}>Presets</div>
+            <div className="preset-row">
+              {Object.keys(GRADE_PRESETS).map(name => (
+                <div
+                  key={name}
+                  className={`preset-chip ${g.preset === name ? 'active' : ''}`}
+                  onClick={() => dispatch({ type: 'APPLY_GRADE_PRESET', preset: name })}
+                >{name}</div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="sec-label" style={{ marginBottom: 8 }}>Grade</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div className="slider-row">
+                <label>Brightness</label>
+                <input type="range" min="0.5" max="1.5" step="0.01" value={g.brightness}
+                  onChange={(e) => dispatch({ type: 'PATCH_GRADE', patch: { brightness: Number(e.target.value) } })} />
+                <span className="val">{g.brightness.toFixed(2)}</span>
+              </div>
+              <div className="slider-row">
+                <label>Contrast</label>
+                <input type="range" min="0.5" max="1.8" step="0.01" value={g.contrast}
+                  onChange={(e) => dispatch({ type: 'PATCH_GRADE', patch: { contrast: Number(e.target.value) } })} />
+                <span className="val">{g.contrast.toFixed(2)}</span>
+              </div>
+              <div className="slider-row">
+                <label>Saturation</label>
+                <input type="range" min="0" max="2" step="0.01" value={g.saturate}
+                  onChange={(e) => dispatch({ type: 'PATCH_GRADE', patch: { saturate: Number(e.target.value) } })} />
+                <span className="val">{g.saturate.toFixed(2)}</span>
+              </div>
+              <div className="slider-row">
+                <label>Blacks</label>
+                <input type="range" min="-0.3" max="0.3" step="0.01" value={g.blacks}
+                  onChange={(e) => dispatch({ type: 'PATCH_GRADE', patch: { blacks: Number(e.target.value) } })} />
+                <span className="val">{g.blacks.toFixed(2)}</span>
+              </div>
+              <div className="slider-row">
+                <label>Warmth</label>
+                <input type="range" min="-1" max="1" step="0.02" value={g.warmth || 0}
+                  onChange={(e) => dispatch({ type: 'PATCH_GRADE', patch: { warmth: Number(e.target.value) } })} />
+                <span className="val">{(g.warmth || 0).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="ai-card stub" style={{ marginTop: 8 }}>
+            <div className="row">
+              <h4>Scene theme</h4>
+              <span className="stub-tag">v2</span>
+            </div>
+            <div className="desc">Full-bleed theme — moody slate, clean solarpunk, editorial newsprint, etc. Coming in a later version.</div>
+          </div>
+        </>
+      );
+    }
+
+    function BriefTab({ state, dispatch, pushToast }) {
+      const text = useMemo(() => generateBrief(state), [state]);
+      return (
+        <>
+          <div>
+            <h3>Assistant brief</h3>
+            <p className="hint">Structured handoff for GPT. Updates live. Copy to clipboard and paste into your GPT session.</p>
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button className="btn primary tiny" onClick={async () => {
+              try { await navigator.clipboard.writeText(text); pushToast('Brief copied', 'good'); }
+              catch { pushToast('Copy failed', 'bad'); }
+            }}>Copy brief</button>
+            <button className="btn tiny" onClick={() => {
+              const blob = new Blob([text], { type: 'text/plain' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a'); a.href = url; a.download = `${slugify(state.projectName)}-brief.txt`;
+              a.click(); URL.revokeObjectURL(url);
+            }}>Download .txt</button>
+          </div>
+          <pre className="brief-box">{text}</pre>
+          <div>
+            <div className="sec-label" style={{ marginBottom: 6 }}>Session notes</div>
+            <textarea
+              className="inp"
+              style={{ minHeight: 80, resize: 'vertical', fontFamily: 'inherit' }}
+              placeholder="Anything you want GPT to know that isn't on the timeline…"
+              value={state.sessionNotes || ''}
+              onChange={(e) => dispatch({ type: 'PATCH', patch: { sessionNotes: e.target.value } })}
+            />
+          </div>
+        </>
+      );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   CONTEXTUAL BOTTOM TOOLBAR
+    // ──────────────────────────────────────────────────────────────
+    // Speed field with preset popover. Click the chip to open a popover with common speeds
+    // (0.2–2.0 in 0.1 steps, plus fast-forward presets 3×, 4×, 8×). Or type a custom value.
+    function SpeedField({ value, onChange }) {
+      const [open, setOpen] = useState(false);
+      const [popoverPos, setPopoverPos] = useState(null);
+      const btnRef = useRef(null);
+      const popRef = useRef(null);
+
+      useEffect(() => {
+        if (!open) return;
+        const onDoc = (e) => {
+          if (
+            (btnRef.current && btnRef.current.contains(e.target)) ||
+            (popRef.current && popRef.current.contains(e.target))
+          ) return;
+          setOpen(false);
+        };
+        document.addEventListener('mousedown', onDoc);
+        return () => document.removeEventListener('mousedown', onDoc);
+      }, [open]);
+
+      // compute popover position when opening or on window resize
+      useLayoutEffect(() => {
+        if (!open || !btnRef.current) return;
+        const compute = () => {
+          const r = btnRef.current.getBoundingClientRect();
+          const popW = 280;
+          const popH = 260; // approx; will clamp to viewport anyway
+          const margin = 8;
+          // prefer above the button; fall back to below if not enough room
+          let top = r.top - popH - 6;
+          if (top < margin) top = r.bottom + 6;
+          let left = r.left;
+          if (left + popW > window.innerWidth - margin) left = window.innerWidth - popW - margin;
+          if (left < margin) left = margin;
+          setPopoverPos({ top, left, width: popW });
+        };
+        compute();
+        window.addEventListener('resize', compute);
+        window.addEventListener('scroll', compute, true);
+        return () => {
+          window.removeEventListener('resize', compute);
+          window.removeEventListener('scroll', compute, true);
+        };
+      }, [open]);
+
+      const v = round2(value || 1);
+      const isCustom = ![0.2, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 8].some(p => Math.abs(p - v) < 0.001);
+      const slow = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
+      const normal = [1, 1.25, 1.5, 1.75, 2];
+      const fast = [3, 4, 8];
+      const chip = (n) => (
+        <button
+          key={n}
+          className={`preset-chip ${Math.abs(v - n) < 0.001 ? 'active' : ''}`}
+          style={{ fontSize: 11, padding: '4px 8px' }}
+          onClick={() => { onChange(n); setOpen(false); }}
+        >{n}×</button>
+      );
+      return (
+        <>
+          <button
+            ref={btnRef}
+            className={`btn tiny ${v !== 1 ? 'active' : ''}`}
+            title="Playback speed"
+            onClick={() => setOpen(o => !o)}
+            style={{ fontFamily: 'Geist Mono' }}
+          >
+            ⏩ {v}×
+          </button>
+          {open && popoverPos && (
+            <div
+              ref={popRef}
+              className="menu"
+              style={{
+                position: 'fixed',
+                top: popoverPos.top,
+                left: popoverPos.left,
+                width: popoverPos.width,
+                minWidth: 0,
+                padding: 10,
+              }}
+            >
+              <div className="sec-label" style={{ marginBottom: 6 }}>Slow</div>
+              <div className="preset-row" style={{ marginBottom: 8 }}>{slow.map(chip)}</div>
+              <div className="sec-label" style={{ marginBottom: 6 }}>Normal / Fast</div>
+              <div className="preset-row" style={{ marginBottom: 8 }}>{normal.map(chip)}</div>
+              <div className="sec-label" style={{ marginBottom: 6 }}>Really fast</div>
+              <div className="preset-row" style={{ marginBottom: 10 }}>{fast.map(chip)}</div>
+              <div className="sec-label" style={{ marginBottom: 4 }}>Custom</div>
+              <div className="inline-field" style={{ width: '100%' }}>
+                <input
+                  type="number" min="0.1" max="16" step="0.05"
+                  value={v}
+                  onChange={(e) => onChange(Math.max(0.1, Math.min(16, Number(e.target.value))))}
+                  style={{ width: 60 }}
+                />
+                <span className="label">×</span>
+                {isCustom && <span className="label" style={{ color: 'var(--accent)' }}>custom</span>}
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    function ContextualToolbar({ state, dispatch, onRemoveBg, bgBusy, pushToast }) {
+      const sel = state.selection;
+      const clip = sel.itemId ? state.tracks[sel.track]?.find(c => c.id === sel.itemId) : null;
+      const asset = clip ? state.assets.find(a => a.id === clip.assetId) : null;
+
+      if (!clip) {
+        // project-level actions
+        return (
+          <div className="toolbar">
+            <div className="toolbar-context">Project</div>
+            <div className="toolbar-divider" />
+            <button className="btn tiny" onClick={() => {
+              // mute all main videos
+              state.tracks.main.forEach(c => {
+                if (c.kind === 'video' && !c.muted) {
+                  dispatch({ type: 'UPDATE_CLIP', track: 'main', id: c.id, patch: { muted: true } });
+                }
+              });
+              pushToast('Muted all main video clips', 'good');
+            }}>Mute all main</button>
+            <button className="btn tiny" onClick={() => {
+              const first = state.assets.find(a => a.kind === 'image' && !a.isRef);
+              if (first) { dispatch({ type: 'TOGGLE_REF', id: first.id }); pushToast(`Pinned ${first.name} as color ref`, 'good'); }
+              else pushToast('No images to pin. Upload one first.', 'warn');
+            }}>Pin first image as ref</button>
+            <div className="toolbar-spacer" />
+            <span className="micro">Select a clip for per-clip actions · Space = play/pause</span>
+          </div>
+        );
+      }
+
+      const updateClip = (patch) => dispatch({ type: 'UPDATE_CLIP', track: sel.track, id: sel.itemId, patch });
+
+      return (
+        <div className="toolbar">
+          <div className="toolbar-context">{sel.track} · {clip.role || clip.label}</div>
+          <div className="toolbar-divider" />
+
+          {/* Trim / split — main only */}
+          {sel.track === 'main' && (
+            <div className="toolbar-group">
+              <button className="btn tiny" onClick={() => dispatch({ type: 'SPLIT_CLIP', id: sel.itemId })}>Split at playhead</button>
+            </div>
+          )}
+
+          {/* Duration */}
+          <div className="inline-field">
+            <span className="label">dur</span>
+            <input
+              type="number" min="0.1" step="0.1"
+              value={round2(clip.duration)}
+              onChange={(e) => updateClip({ duration: Math.max(0.1, Number(e.target.value)) })}
+            />
+            <span className="label">s</span>
+          </div>
+
+          {/* Trim start — main only for videos */}
+          {sel.track === 'main' && clip.kind === 'video' && (
+            <div className="inline-field">
+              <span className="label">trim in</span>
+              <input
+                type="number" min="0" step="0.1"
+                value={round2(clip.trimStart || 0)}
+                onChange={(e) => updateClip({ trimStart: Math.max(0, Number(e.target.value)) })}
+              />
+            </div>
+          )}
+
+          {/* Speed — video. Click to open preset popover for quick common values, or type manually. */}
+          {clip.kind === 'video' && (
+            <SpeedField
+              value={clip.speed || 1}
+              onChange={(s) => {
+                // preserve source length — 10s at 2× = 5s timeline; 10s at 0.5× = 20s timeline
+                const oldSpeed = clip.speed || 1;
+                const sourceLen = (clip.duration || 0) * oldSpeed;
+                const newDur = round2(Math.max(0.1, sourceLen / s));
+                updateClip({ speed: s, duration: newDur });
+              }}
+            />
+          )}
+
+          {/* Recenter — main, shows only if clip was moved/scaled */}
+          {sel.track === 'main' && (clip.scale !== 1 || (clip.offset && (clip.offset.x || clip.offset.y))) && (
+            <button
+              className="btn tiny ghost"
+              title="Reset scale & position"
+              onClick={() => updateClip({ scale: 1, offset: { x: 0, y: 0 } })}
+            >Recenter</button>
+          )}
+
+          {/* Reset corner — overlay, shows only if overlay was moved */}
+          {sel.track === 'overlay' && (
+            <button
+              className="btn tiny ghost"
+              title="Reset overlay to top-left corner"
+              onClick={() => updateClip({ position: { x: 0.03, y: 0.03, width: 0.2 } })}
+            >Corner</button>
+          )}
+
+          {/* Mute */}
+          {(clip.kind === 'video' || clip.kind === 'audio') && (
+            <button
+              className={`btn tiny ${clip.muted ? 'active' : ''}`}
+              onClick={() => updateClip({ muted: !clip.muted })}
+            >{clip.muted ? 'Muted' : 'Mute'}</button>
+          )}
+
+          {/* Style lock — main video clips can match stills, any clip with custom grade can reset */}
+          {sel.track === 'main' && clip.kind === 'video' && (
+            <>
+              <div className="toolbar-divider" />
+              <button
+                className={`btn tiny ${clip.grade ? 'active' : ''}`}
+                title="Copy the first still beat's current grade onto this video (Ctrl/Cmd+click on the clip also works)"
+                onClick={() => {
+                  const res = matchStyleToStills(state, 'main', sel.itemId);
+                  if (!res.ok) { pushToast(res.message, 'warn'); return; }
+                  updateClip(res.patch);
+                  pushToast(`Style locked to "${res.sourceLabel}"`, 'good');
+                }}
+              >{clip.grade ? '✓ Matched to stills' : 'Match stills'}</button>
+            </>
+          )}
+          {clip.grade && (
+            <button
+              className="btn tiny ghost"
+              title="Drop custom grade, fall back to project grade"
+              onClick={() => updateClip({ grade: null, matchSnapshot: null })}
+            >Reset style</button>
+          )}
+
+          {/* Image-specific: Remove BG */}
+          {clip.kind === 'image' && (
+            <>
+              <div className="toolbar-divider" />
+              <button className="btn tiny primary" disabled={bgBusy} onClick={onRemoveBg}>
+                {bgBusy ? 'Working…' : 'Remove BG'}
+              </button>
+              <button
+                className={`btn tiny ${asset?.isRef ? 'active' : ''}`}
+                onClick={() => { if (asset) dispatch({ type: 'TOGGLE_REF', id: asset.id }); }}
+              >{asset?.isRef ? '✓ Used as ref' : 'Use as ref'}</button>
+            </>
+          )}
+
+          <div className="toolbar-spacer" />
+
+          {/* Duplicate / Delete */}
+          <button className="btn tiny" onClick={() => {
+            const copy = { ...clip, id: newId('clip') };
+            dispatch({ type: 'ADD_CLIP', track: sel.track, clip: copy });
+          }}>Duplicate</button>
+          <button className="btn tiny warn" onClick={() => dispatch({ type: 'REMOVE_CLIP', track: sel.track, id: sel.itemId })}>Delete</button>
+        </div>
+      );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   EXPORTS
+    // ──────────────────────────────────────────────────────────────
+    function generateBrief(state) {
+      const reel = getReelLength(state);
+      const starts = getMainStarts(state.tracks.main);
+      const lines = [];
+      lines.push(`# ${state.projectName}`);
+      lines.push(``);
+      lines.push(`Format: ${state.format} (${FORMATS[state.format]?.w}×${FORMATS[state.format]?.h})`);
+      lines.push(`Length: ${round2(reel)}s / ${state.targetLength}s target`);
+      lines.push(``);
+      lines.push(`## Grade`);
+      lines.push(`Preset: ${state.projectGrade.preset}`);
+      lines.push(`Brightness ${state.projectGrade.brightness}, contrast ${state.projectGrade.contrast}, saturation ${state.projectGrade.saturate}, blacks ${state.projectGrade.blacks}, warmth ${state.projectGrade.warmth || 0}`);
+      lines.push(``);
+      const refAsset = state.assets.find(a => a.id === state.colorMatch.refAssetId);
+      if (refAsset) {
+        const pal = state.colorMatch.refPalette;
+        const d = computeMatchDelta(pal);
+        lines.push(`## Tone match`);
+        lines.push(`Reference: ${refAsset.name}`);
+        lines.push(`Strength: ${Math.round(state.colorMatch.strength * 100)}% (affects saturation, brightness, warmth — NOT individual hue remapping)`);
+        if (pal) {
+          lines.push(`Subject RGB (saturation-weighted): ${(pal.satRgb || pal.avgRgb).map(v => Math.round(v)).join(', ')}`);
+          lines.push(`Overall avg RGB: ${pal.avgRgb.map(v => Math.round(v)).join(', ')}`);
+        }
+        if (d) {
+          lines.push(`Warmth: ${d.warmth.toFixed(2)} (${d.warmth > 0.1 ? 'warm' : d.warmth < -0.1 ? 'cool' : 'neutral'})`);
+          lines.push(`Target saturation: ${d.saturation.toFixed(2)}, lightness: ${d.lightness.toFixed(2)}`);
+          lines.push(`→ GPT: for true color match, build a LUT or curve from this reference in Resolve/FFmpeg's lut3d filter.`);
+        }
+        lines.push(``);
+      }
+      lines.push(`## Main track (${state.tracks.main.length} clips)`);
+      state.tracks.main.forEach((c, i) => {
+        const ai = Object.entries(c.aiFlags || {}).filter(([,v]) => v).map(([k]) => k).join(', ');
+        const styleNote = c.grade
+          ? ` — CUSTOM GRADE (locked, probably matched to stills): brightness ${c.grade.brightness}, contrast ${c.grade.contrast}, saturation ${c.grade.saturate}, blacks ${c.grade.blacks}`
+          : '';
+        const tIn = c.transitionIn;
+        const transNote = (i > 0 && tIn && tIn.type !== 'cut' && tIn.duration > 0)
+          ? ` — transition in: ${TRANSITIONS[tIn.type]?.label || tIn.type} (${tIn.duration}s, ffmpeg xfade=${TRANSITIONS[tIn.type]?.ffmpeg})`
+          : '';
+        lines.push(`${i + 1}. [${fmtTC(starts[i])} → ${fmtTC(starts[i] + c.duration)}] ${c.label} (${c.role}, ${round2(c.duration)}s${c.speed !== 1 ? `, ${c.speed}×` : ''}${c.muted ? ', muted' : ''}${c.trimStart ? `, trim in ${c.trimStart}s` : ''})${ai ? ` — AI: ${ai}` : ''}${styleNote}${transNote}${c.note ? ` — ${c.note}` : ''}`);
+      });
+      if (state.tracks.overlay.length) {
+        lines.push(``);
+        lines.push(`## Overlay track`);
+        state.tracks.overlay.forEach((c, i) => {
+          const p = c.position || {};
+          lines.push(`${i + 1}. ${c.label} — ${c.role}, ${round2(c.duration)}s @ (${round2(p.x || 0)}, ${round2(p.y || 0)}), width ${round2((p.width || 0) * 100)}%`);
+        });
+      }
+      if (state.tracks.music.length) {
+        lines.push(``);
+        lines.push(`## Music`);
+        state.tracks.music.forEach((c, i) => {
+          lines.push(`${i + 1}. ${c.label} — ${round2(c.duration)}s, volume ${state.music.volume}, fades ${state.music.fadeIn}s/${state.music.fadeOut}s`);
+        });
+      }
+      if (state.sessionNotes) {
+        lines.push(``);
+        lines.push(`## Notes`);
+        lines.push(state.sessionNotes);
+      }
+      lines.push(``);
+      lines.push(`## Assets referenced`);
+      state.assets.forEach(a => lines.push(`- ${a.name} (${a.kind}, ${a.sizeLabel})${a.isRef ? ' [color-ref]' : ''}${a.isBrand ? ' [brand]' : ''}`));
+      return lines.join('\n');
+    }
+
+    function exportSpec(state, pushToast) {
+      const brief = generateBrief(state);
+      const ffmpeg = buildFfmpegCommand(state);
+      const payload = {
+        meta: {
+          projectName: state.projectName,
+          format: state.format,
+          targetLength: state.targetLength,
+          reelLength: getReelLength(state),
+          exportedAt: new Date().toISOString(),
+        },
+        grade: state.projectGrade,
+        colorMatch: { refAssetName: state.assets.find(a => a.id === state.colorMatch.refAssetId)?.name || null, strength: state.colorMatch.strength, avgRgb: state.colorMatch.refPalette?.avgRgb || null },
+        music: state.music,
+        tracks: state.tracks,
+        assets: state.assets.map(a => ({ name: a.name, kind: a.kind, sizeLabel: a.sizeLabel, isRef: a.isRef, isBrand: a.isBrand })),
+        brief,
+        ffmpeg,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `${slugify(state.projectName)}-recipe.json`;
+      a.click(); URL.revokeObjectURL(url);
+      pushToast('Recipe exported (JSON + FFmpeg)', 'good');
+    }
+
+    function buildFfmpegCommand(state) {
+      const { w, h } = FORMATS[state.format] || FORMATS['9:16'];
+      const inputs = [];
+      const filters = [];
+      let inputIdx = 0;
+      const mainClips = state.tracks.main;
+      const assetMap = new Map(state.assets.map(a => [a.id, a]));
+
+      // Phase 1: normalize each clip's video stream (scale/pad/grade/speed) to [v0]…[vN]
+      mainClips.forEach((c, i) => {
+        const a = assetMap.get(c.assetId);
+        if (!a) return;
+        inputs.push(`-ss ${round2(c.trimStart || 0)} -t ${round2(c.duration * (c.speed || 1))} -i "${a.name}"`);
+        let f = `[${inputIdx}:v]scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30`;
+        if (c.speed && c.speed !== 1) f += `,setpts=${(1 / c.speed).toFixed(3)}*PTS`;
+        const g = c.grade || state.projectGrade;
+        f += `,eq=brightness=${round2(g.brightness - 1)}:contrast=${round2(g.contrast)}:saturation=${round2(g.saturate)}`;
+        f += `[v${i}]`;
+        filters.push(f);
+        inputIdx++;
+      });
+
+      // Phase 2: chain with xfade OR concat depending on whether any transitions exist.
+      // xfade requires pairs, so we chain: xfade(v0, v1) -> x1, xfade(x1, v2) -> x2, ...
+      // xfade offset = cumulative duration of previous clips minus half the transition duration.
+      const hasAnyTransition = mainClips.some((c, i) =>
+        i > 0 && c.transitionIn && c.transitionIn.type !== 'cut' && c.transitionIn.duration > 0
+      );
+
+      if (!hasAnyTransition || mainClips.length < 2) {
+        // simple concat path — no transitions
+        const concat = mainClips.map((_, i) => `[v${i}]`).join('');
+        filters.push(`${concat}concat=n=${mainClips.length}:v=1:a=0[outv]`);
+      } else {
+        // xfade chain. Compute cumulative offsets.
+        let prev = `[v0]`;
+        let cumDur = Number(mainClips[0].duration || 0);
+        for (let i = 1; i < mainClips.length; i++) {
+          const c = mainClips[i];
+          const tIn = c.transitionIn || { type: 'cut', duration: 0 };
+          const useTrans = tIn.type !== 'cut' && tIn.duration > 0;
+          const transDur = useTrans ? tIn.duration : 0;
+          const transName = useTrans ? (TRANSITIONS[tIn.type]?.ffmpeg || 'fade') : 'fade';
+          // xfade offset: point at which the transition starts in the combined stream
+          // For a hard cut we still use xfade with duration 0.01 or fall back to concat pairs
+          const outLabel = (i === mainClips.length - 1) ? '[outv]' : `[x${i}]`;
+          if (useTrans) {
+            const offset = round2(cumDur - transDur / 2);
+            filters.push(`${prev}[v${i}]xfade=transition=${transName}:duration=${transDur}:offset=${offset}${outLabel}`);
+          } else {
+            // Use xfade with a minimal duration for a clean cut within the chain
+            const offset = round2(cumDur);
+            filters.push(`${prev}[v${i}]xfade=transition=fade:duration=0.04:offset=${offset}${outLabel}`);
+          }
+          // Cumulative duration: add this clip's duration minus the transition overlap
+          cumDur = round2(cumDur + Number(c.duration || 0) - transDur);
+          prev = outLabel;
+        }
+      }
+
+      const cmd = `ffmpeg \\\n  ${inputs.join(' \\\n  ')} \\\n  -filter_complex "${filters.join(';\n')}" \\\n  -map "[outv]" -c:v libx264 -pix_fmt yuv420p -crf 18 -r 30 \\\n  "${slugify(state.projectName)}.mp4"`;
+      return cmd;
+    }
+
+    const slugify = (t) => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'reel-lab';
+
+    // ── Shared FFmpeg instance (lazy-loaded once, reused for convert + export) ──
+    let _ffmpegInstance = null;
+    let _ffmpegLoading = null;
+    async function getFFmpeg() {
+      if (_ffmpegInstance) return _ffmpegInstance;
+      if (_ffmpegLoading) return _ffmpegLoading;
+      const { FFmpeg } = await import('@ffmpeg/ffmpeg');
+      const { toBlobURL } = await import('@ffmpeg/util');
+      const ff = new FFmpeg();
+      const base = 'https://unpkg.com/@ffmpeg/core-st@0.12.6/dist/umd';
+      _ffmpegLoading = ff.load({
+        coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript'),
+        wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
+      }).then(() => { _ffmpegInstance = ff; _ffmpegLoading = null; return ff; });
+      return _ffmpegLoading;
+    }
+
+    // ── Auto-convert unsupported codecs (HEVC etc.) to H.264 on import ──
+    const MAX_CONVERT_BYTES = 200 * 1024 * 1024; // 200 MB
+
+    async function convertToH264(asset, dispatch, pushToast) {
+      try {
+        const resp = await fetch(asset.url);
+        const buf = await resp.arrayBuffer();
+        if (buf.byteLength > MAX_CONVERT_BYTES) {
+          dispatch({ type: 'UPDATE_ASSET', id: asset.id, patch: { converting: false } });
+          pushToast(`${asset.name} too large to auto-convert (> 200 MB) — pre-convert on your phone`, 'warn');
+          return;
+        }
+        const ff = await getFFmpeg();
+        await ff.writeFile('input_conv.mp4', new Uint8Array(buf));
+        await ff.exec([
+          '-i', 'input_conv.mp4',
+          '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+          '-c:a', 'aac', '-movflags', 'faststart',
+          'output_conv.mp4',
+        ]);
+        const out = await ff.readFile('output_conv.mp4');
+        const blob = new Blob([out.buffer.slice(0)], { type: 'video/mp4' });
+        const newUrl = URL.createObjectURL(blob);
+        const dur = await new Promise(res => {
+          const v = document.createElement('video');
+          v.src = newUrl;
+          v.onloadedmetadata = () => { res(v.duration); v.src = ''; };
+          v.onerror = () => res(null);
+        });
+        dispatch({ type: 'UPDATE_ASSET', id: asset.id, patch: {
+          url: newUrl, converting: false,
+          duration: dur && isFinite(dur) ? round2(dur) : asset.duration,
+        }});
+        pushToast(`${asset.name} → H.264 ready`, 'good');
+        try { await ff.deleteFile('input_conv.mp4'); } catch {}
+        try { await ff.deleteFile('output_conv.mp4'); } catch {}
+      } catch (err) {
+        dispatch({ type: 'UPDATE_ASSET', id: asset.id, patch: { converting: false } });
+        pushToast(`Convert failed: ${String(err.message || err)}`, 'warn');
+      }
+    }
+
+    async function runMp4Export(state, onProgress) {
+      // Use the shared FFmpeg instance (may already be loaded from auto-convert)
+      onProgress(0.02, 'Loading ffmpeg…');
+      const ffmpeg = await getFFmpeg();
+      ffmpeg.on('log', ({ message }) => onProgress(null, message));
+      ffmpeg.on('progress', ({ progress }) => onProgress(Math.min(0.99, progress), null));
+      onProgress(0.1, 'ffmpeg ready.');
+
+      const mainClips = state.tracks.main;
+      if (!mainClips.length) throw new Error('No clips on main track');
+
+      const assetMap = new Map(state.assets.map(a => [a.id, a]));
+      const { w, h } = FORMATS[state.format] || FORMATS['9:16'];
+
+      // write input files
+      const inputsArgs = [];
+      const filters = [];
+      let idx = 0;
+      for (let i = 0; i < mainClips.length; i++) {
+        const c = mainClips[i];
+        const a = assetMap.get(c.assetId);
+        if (!a) continue;
+        const ext = a.name.split('.').pop();
+        const fname = `in${i}.${ext}`;
+        onProgress(0.1 + (i / mainClips.length) * 0.2, `Writing ${a.name}…`);
+        const resp = await fetch(a.url);
+        const buf = new Uint8Array(await resp.arrayBuffer());
+        await ffmpeg.writeFile(fname, buf);
+
+        if (a.kind === 'image') {
+          inputsArgs.push('-loop', '1', '-t', String(round2(c.duration)), '-i', fname);
+        } else if (a.kind === 'video') {
+          inputsArgs.push('-ss', String(round2(c.trimStart || 0)), '-t', String(round2(c.duration * (c.speed || 1))), '-i', fname);
+        } else {
+          inputsArgs.push('-i', fname); // audio — probably shouldn't be on main
+        }
+
+        let f = `[${idx}:v]scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30`;
+        if (c.speed && c.speed !== 1 && a.kind === 'video') f += `,setpts=${(1 / c.speed).toFixed(3)}*PTS`;
+        const g = c.grade || state.projectGrade;
+        // note: eq contrast in ffmpeg: 1.0 is neutral
+        f += `,eq=brightness=${round2(g.brightness - 1)}:contrast=${round2(g.contrast)}:saturation=${round2(g.saturate)}`;
+        f += `[v${i}]`;
+        filters.push(f);
+        idx++;
+      }
+
+      // Chain with xfade if any transitions exist, otherwise simple concat
+      const hasAnyTransition = mainClips.some((c, i) =>
+        i > 0 && c.transitionIn && c.transitionIn.type !== 'cut' && c.transitionIn.duration > 0
+      );
+      if (!hasAnyTransition || mainClips.length < 2) {
+        const concat = mainClips.map((_, i) => `[v${i}]`).join('');
+        filters.push(`${concat}concat=n=${mainClips.length}:v=1:a=0[outv]`);
+      } else {
+        let prev = `[v0]`;
+        let cumDur = Number(mainClips[0].duration || 0);
+        for (let i = 1; i < mainClips.length; i++) {
+          const c = mainClips[i];
+          const tIn = c.transitionIn || { type: 'cut', duration: 0 };
+          const useTrans = tIn.type !== 'cut' && tIn.duration > 0;
+          const transDur = useTrans ? tIn.duration : 0.04;
+          const transName = useTrans ? (TRANSITIONS[tIn.type]?.ffmpeg || 'fade') : 'fade';
+          const outLabel = (i === mainClips.length - 1) ? '[outv]' : `[x${i}]`;
+          const offset = useTrans ? round2(cumDur - transDur / 2) : round2(cumDur);
+          filters.push(`${prev}[v${i}]xfade=transition=${transName}:duration=${transDur}:offset=${offset}${outLabel}`);
+          cumDur = round2(cumDur + Number(c.duration || 0) - (useTrans ? transDur : 0));
+          prev = outLabel;
+        }
+      }
+
+      // music? We'll skip for v1 MP4 export (keep it lean) unless there's exactly one music clip
+      const hasMusic = state.tracks.music.length > 0;
+      let musicInputIdx = null;
+      if (hasMusic) {
+        const mc = state.tracks.music[0];
+        const ma = assetMap.get(mc.assetId);
+        if (ma) {
+          const ext = ma.name.split('.').pop();
+          const fname = `music.${ext}`;
+          onProgress(0.32, `Writing music…`);
+          const resp = await fetch(ma.url);
+          const buf = new Uint8Array(await resp.arrayBuffer());
+          await ffmpeg.writeFile(fname, buf);
+          inputsArgs.push('-i', fname);
+          musicInputIdx = idx;
+          filters.push(`[${musicInputIdx}:a]volume=${state.music.volume},afade=t=in:st=0:d=${state.music.fadeIn},afade=t=out:st=${Math.max(0, getReelLength(state) - state.music.fadeOut)}:d=${state.music.fadeOut}[outa]`);
+        }
+      }
+
+      const out = `out.mp4`;
+      const filterStr = filters.join(';');
+      const cmdArgs = [
+        ...inputsArgs,
+        '-filter_complex', filterStr,
+        '-map', '[outv]',
+      ];
+      if (hasMusic && musicInputIdx !== null) {
+        cmdArgs.push('-map', '[outa]', '-c:a', 'aac', '-b:a', '192k');
+      }
+      cmdArgs.push(
+        '-c:v', 'libx264',
+        '-pix_fmt', 'yuv420p',
+        '-preset', 'veryfast',
+        '-crf', '20',
+        '-r', '30',
+        out,
+      );
+      onProgress(0.35, `Encoding (${cmdArgs.join(' ')})`);
+      await ffmpeg.exec(cmdArgs);
+      onProgress(0.95, 'Reading output…');
+      const data = await ffmpeg.readFile(out);
+      const blob = new Blob([data.buffer], { type: 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `${slugify(state.projectName)}.mp4`;
+      a.click();
+      onProgress(1.0, 'Done.');
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   EXPORT MODAL
+    // ──────────────────────────────────────────────────────────────
+    function ExportModal({ modal, close }) {
+      const logRef = useRef(null);
+      useEffect(() => {
+        if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+      }, [modal.log?.length]);
+
+      if (modal.type === 'mp4-error') {
+        return (
+          <div className="modal-backdrop" onClick={close}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <h2>MP4 export failed</h2>
+              <p>Something went wrong. If you opened this file directly via file://, ffmpeg.wasm may be limited. Try opening it from a local server (e.g. <code className="font-mono">python3 -m http.server</code>).</p>
+              <div className="log">{modal.message}</div>
+              <div className="row-end">
+                <button className="btn" onClick={close}>Close</button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="modal-backdrop" onClick={modal.done ? close : undefined}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{modal.done ? 'Export complete' : 'Rendering MP4…'}</h2>
+            <p>{modal.done ? 'Your MP4 has been downloaded.' : 'This runs in your browser via ffmpeg.wasm. First run fetches ~30MB of core files. Larger projects can take a while.'}</p>
+            <div className="progress-bar"><div className="progress-fill" style={{ width: `${Math.round((modal.progress || 0) * 100)}%` }} /></div>
+            <div className="log" ref={logRef}>{(modal.log || []).slice(-40).join('\n')}</div>
+            <div className="row-end">
+              <button className="btn" onClick={close}>{modal.done ? 'Close' : 'Dismiss (cancel not supported)'}</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   TOASTS
+    // ──────────────────────────────────────────────────────────────
+    function ToastStack({ toasts }) {
+      return (
+        <div className="toast-container">
+          {toasts.map(t => (
+            <div key={t.id} className={`toast ${t.kind}`}>{t.message}</div>
+          ))}
+        </div>
+      );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   CHEAT SHEET
+    // ──────────────────────────────────────────────────────────────
+    function CheatSheet({ close }) {
+      const SHORTCUTS = [
+        { section: 'Playback' },
+        { key: 'Space', action: 'Play / pause · at end: rewind to start' },
+        { section: 'Editing' },
+        { key: 'S', action: 'Split selected main clip at playhead' },
+        { key: 'Delete / Backspace', action: 'Remove selected clip' },
+        { key: '?', action: 'Show this cheat sheet' },
+        { section: 'Mouse · Timeline' },
+        { key: 'Click asset in library', action: 'Preview it' },
+        { key: 'Double-click asset', action: 'Add to timeline' },
+        { key: 'Drag asset', action: 'Drop onto a specific lane' },
+        { key: 'Right-click asset', action: 'Context menu (pin ref, set brand, remove)' },
+        { key: 'Drag clip edges', action: 'Trim start / end' },
+        { key: 'Drag main clip', action: 'Reorder' },
+        { key: 'Drag playhead or ruler', action: 'Scrub' },
+        { key: 'Click diamond between clips', action: 'Add / change transition (dissolve, fade, wipe, whip)' },
+        { section: 'Mouse · Preview' },
+        { key: 'Drag preview', action: 'Pan the main shot inside the frame' },
+        { key: 'Drag corner handle', action: 'Scale main shot (when selected)' },
+        { key: 'Drag overlay', action: 'Move overlay · corners resize' },
+        { section: 'Tone match (video)' },
+        { key: 'Pick reference', action: 'In Match tab, click a pinned image' },
+        { key: 'Ctrl/Cmd+click video clip', action: 'Queue for tone match' },
+        { key: 'Match N clips', action: 'Apply queued tone match (Match tab)' },
+      ];
+      return (
+        <div className="modal-backdrop" onClick={close}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560, minWidth: 440 }}>
+            <h2>Shortcuts</h2>
+            <p className="hint" style={{ marginBottom: 14 }}>Press <kbd style={{ background: 'var(--panel)', border: '1px solid var(--line-2)', padding: '1px 6px', borderRadius: 3, fontFamily: 'Geist Mono', fontSize: 10 }}>?</kbd> anytime to open this.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 12 }}>
+              {SHORTCUTS.map((s, i) => s.section ? (
+                <div key={i} className="sec-label" style={{ marginTop: i === 0 ? 0 : 10, marginBottom: 4 }}>{s.section}</div>
+              ) : (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 10, padding: '3px 0', alignItems: 'baseline' }}>
+                  <kbd style={{ background: 'var(--panel)', border: '1px solid var(--line-2)', padding: '2px 8px', borderRadius: 4, fontFamily: 'Geist Mono', fontSize: 11, color: 'var(--text)', width: 'fit-content' }}>{s.key}</kbd>
+                  <span style={{ color: 'var(--muted)', lineHeight: 1.4 }}>{s.action}</span>
+                </div>
+              ))}
+            </div>
+            <div className="row-end" style={{ marginTop: 18 }}>
+              <button className="btn" onClick={close}>Close</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //   MOUNT
+    // ──────────────────────────────────────────────────────────────
+    createRoot(document.getElementById('root')).render(<App />);
+
+    // expose for debugging
+    window.__ReelLab = { loadState, defaultState };
+  </script>
+</body>
 </html>
