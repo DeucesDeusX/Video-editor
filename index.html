@@ -1913,7 +1913,7 @@
           el.onloadedmetadata = () => {
             done(el.duration);
             if (asset.kind === 'video' && el.videoWidth === 0) {
-              // Browser cannot decode this codec (likely HEVC/H.265) — auto-convert
+              // Container parsed but codec unsupported (HEVC etc.) — auto-convert
               el.src = '';
               dispatch({ type: 'UPDATE_ASSET', id: asset.id, patch: { converting: true } });
               convertToH264(asset, dispatch, pushToast);
@@ -1921,7 +1921,15 @@
               el.src = '';
             }
           };
-          el.onerror = () => { /* leave duration null, default clip will use 3s fallback */ };
+          el.onerror = () => {
+            // MEDIA_ERR_SRC_NOT_SUPPORTED (code 4) = codec not supported at all
+            if (asset.kind === 'video' && el.error?.code === 4) {
+              el.src = '';
+              dispatch({ type: 'UPDATE_ASSET', id: asset.id, patch: { converting: true } });
+              convertToH264(asset, dispatch, pushToast);
+            }
+            // else leave duration null — clip uses 3s fallback
+          };
           el.src = asset.url;
         });
       }, [pushToast]);
