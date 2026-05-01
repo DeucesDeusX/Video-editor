@@ -4141,12 +4141,12 @@
       if (_ffmpegInstance) return _ffmpegInstance;
       if (_ffmpegLoading) return _ffmpegLoading;
       const { FFmpeg } = await import('@ffmpeg/ffmpeg');
-      const { toBlobURL } = await import('@ffmpeg/util');
       const ff = new FFmpeg();
-      const base = 'https://unpkg.com/@ffmpeg/core-st@0.12.6/dist/umd';
+      // Use locally served WASM (no CDN dependency)
       _ffmpegLoading = ff.load({
-        coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
+        coreURL: '/ffmpeg/ffmpeg-core.js',
+        wasmURL: '/ffmpeg/ffmpeg-core.wasm',
+        workerURL: '/ffmpeg/ffmpeg-core.worker.js',
       }).then(() => {
         _ffmpegInstance = ff;
         _ffmpegLoading = null;
